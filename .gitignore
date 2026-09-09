@@ -1,3 +1,5 @@
 exemplo/
 UI/node_modules/
 UI/dist/
+UI/dist-electron/
+UI/release/

@@ -19,14 +19,8 @@ import {
   type PumpDirection,
   type PumpSetpoint,
 } from "../lib/calibration";
-import { commands, createEmptyState } from "../lib/protocol";
-import {
-  SerialClient,
-  describePort,
-  listSerialPorts,
-  requestSerialPort,
-  serialSupported,
-} from "../lib/serial";
+import { commands, createEmptyState, parseLine } from "../lib/protocol";
+import { SerialClient, listSerialPorts, serialSupported, type ComPort } from "../lib/serial";
 import { loadCalibrations, saveCalibrations } from "../lib/storage";
 
 export type DisplayPump = {
@@ -47,10 +41,9 @@ type BenchContextValue = {
   error: string | null;
   pumps: DisplayPump[];
   globalPwm: number;
-  knownPorts: SerialPort[];
+  knownPorts: ComPort[];
   refreshPorts: () => Promise<void>;
-  connectTo: (port: SerialPort) => Promise<void>;
-  choosePort: () => Promise<void>;
+  connectTo: (portPath: string, label?: string) => Promise<void>;
   disconnect: () => Promise<void>;
   setPwm: (id: number, pwm: number) => void;
   setDirection: (id: number, direction: PumpDirection) => void;
@@ -95,7 +88,7 @@ export function BenchProvider({ children }: { children: ReactNode }) {
   const [setpoints, setSetpoints] = useState(createDefaultSetpoints);
   const [calibrations, setCalibrations] = useState(loadCalibrations);
   const [globalPwm, setGlobalPwmState] = useState(0);
-  const [knownPorts, setKnownPorts] = useState<SerialPort[]>([]);
+  const [knownPorts, setKnownPorts] = useState<ComPort[]>([]);
 
   const clientRef = useRef<SerialClient | null>(null);
   const connectedRef = useRef(false);
@@ -161,14 +154,18 @@ export function BenchProvider({ children }: { children: ReactNode }) {
   }, [serialOk]);
 
   const connectTo = useCallback(
-    async (port: SerialPort) => {
+    async (portPath: string, label?: string) => {
       setConnecting(true);
       setError(null);
       await dropConnection();
       setConnecting(true);
 
       const client = new SerialClient({
-        onLine: (line) => {
+        onLine: (raw) => {
+          const line = parseLine(raw);
+          if (!line) {
+            return;
+          }
           if (line.kind === "hello") {
             helloWaitRef.current?.(true);
             helloWaitRef.current = null;
@@ -191,9 +188,9 @@ export function BenchProvider({ children }: { children: ReactNode }) {
       });
 
       try {
-        await client.connect(port);
+        await client.connect(portPath);
         clientRef.current = client;
-        setPortLabel(describePort(port));
+        setPortLabel(label || portPath);
 
         const hello = new Promise<boolean>((resolve) => {
           helloWaitRef.current = resolve;
@@ -229,20 +226,6 @@ export function BenchProvider({ children }: { children: ReactNode }) {
     },
     [dropConnection, refreshPorts, send],
   );
-
-  const choosePort = useCallback(async () => {
-    try {
-      const port = await requestSerialPort();
-      await connectTo(port);
-    } catch (caught) {
-      if (caught instanceof DOMException && caught.name === "NotFoundError") {
-        return;
-      }
-      setError(
-        caught instanceof Error ? caught.message : "Não foi possível escolher a porta.",
-      );
-    }
-  }, [connectTo]);
 
   const disconnect = useCallback(async () => {
     await dropConnection();
@@ -402,7 +385,6 @@ export function BenchProvider({ children }: { children: ReactNode }) {
       knownPorts,
       refreshPorts,
       connectTo,
-      choosePort,
       disconnect,
       setPwm,
       setDirection,
@@ -416,7 +398,6 @@ export function BenchProvider({ children }: { children: ReactNode }) {
     }),
     [
       applyGlobalPwm,
-      choosePort,
       connectTo,
       connected,
       connecting,

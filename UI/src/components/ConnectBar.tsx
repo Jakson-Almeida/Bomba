@@ -1,5 +1,5 @@
+import { useEffect, useState } from "react";
 import { useBench } from "../context/BenchContext";
-import { describePort } from "../lib/serial";
 
 export function ConnectBar() {
   const {
@@ -8,11 +8,18 @@ export function ConnectBar() {
     connecting,
     error,
     knownPorts,
-    choosePort,
     connectTo,
     disconnect,
     refreshPorts,
+    portLabel,
   } = useBench();
+  const [path, setPath] = useState("");
+
+  useEffect(() => {
+    if (!path && knownPorts[0]) {
+      setPath(knownPorts[0].path);
+    }
+  }, [knownPorts, path]);
 
   return (
     <div className="border-y border-border bg-panel/80 px-4 py-3 backdrop-blur-xl">
@@ -22,41 +29,45 @@ export function ConnectBar() {
         </span>
         {!serialOk && (
           <p className="text-[13px] text-off">
-            Abra esta interface no Chrome ou Edge para listar as portas USB.
+            Abra o aplicativo desktop (Electron) para listar as portas COM.
           </p>
         )}
         {serialOk && (
           <>
             <select
-              className="field-light max-w-[220px]"
-              disabled={connecting || knownPorts.length === 0}
-              defaultValue=""
-              onChange={(event) => {
-                const index = Number(event.target.value);
-                const port = knownPorts[index];
-                if (port) {
-                  void connectTo(port);
-                }
-              }}
+              className="field-light max-w-[280px]"
+              disabled={connecting || connected}
+              value={path}
+              onChange={(event) => setPath(event.target.value)}
             >
-              <option value="" disabled>
-                {knownPorts.length
-                  ? "Portas autorizadas"
-                  : "Nenhuma porta autorizada"}
-              </option>
-              {knownPorts.map((port, index) => (
-                <option key={index} value={index}>
-                  {describePort(port)}
+              {knownPorts.length === 0 && (
+                <option value="">Nenhuma porta encontrada</option>
+              )}
+              {knownPorts.map((port) => (
+                <option key={port.path} value={port.path}>
+                  {port.label}
                 </option>
               ))}
             </select>
-            <button
-              onClick={() => void choosePort()}
-              disabled={connecting}
-              className="rounded-[10px] bg-run px-3 py-2 text-[12px] leading-none font-medium text-run-foreground ring-1 ring-run/30 active:opacity-90 disabled:opacity-40"
-            >
-              {connecting ? "Abrindo…" : "Selecionar porta COM"}
-            </button>
+            {connected ? (
+              <button
+                onClick={() => void disconnect()}
+                className="rounded-[10px] bg-foreground/5 px-3 py-2 text-[12px] leading-none font-medium text-foreground ring-1 ring-border"
+              >
+                Desconectar
+              </button>
+            ) : (
+              <button
+                onClick={() => {
+                  const selected = knownPorts.find((port) => port.path === path);
+                  void connectTo(path, selected?.label);
+                }}
+                disabled={connecting || !path}
+                className="rounded-[10px] bg-run px-3 py-2 text-[12px] leading-none font-medium text-run-foreground ring-1 ring-run/30 active:opacity-90 disabled:opacity-40"
+              >
+                {connecting ? "Abrindo…" : "Conectar"}
+              </button>
+            )}
             <button
               onClick={() => void refreshPorts()}
               disabled={connecting}
@@ -64,24 +75,17 @@ export function ConnectBar() {
             >
               Atualizar
             </button>
-            {connected && (
-              <button
-                onClick={() => void disconnect()}
-                className="rounded-[10px] bg-foreground/5 px-3 py-2 text-[12px] leading-none font-medium text-foreground ring-1 ring-border"
-              >
-                Desconectar
-              </button>
-            )}
           </>
         )}
       </div>
-      {error && (
-        <p className="mt-2 text-[12px] text-off">{error}</p>
+      {connected && (
+        <p className="mt-2 text-[12px] text-run">Conectado em {portLabel}</p>
       )}
+      {error && <p className="mt-2 text-[12px] text-off">{error}</p>}
       {!connected && serialOk && (
         <p className="mt-2 text-[12px] text-muted-foreground">
-          Escolha a porta COM do ESP32. Enquanto estiver desconectado, os valores
-          das bombas permanecem em zero.
+          Escolha a porta COM do ESP32 e clique em Conectar. Desconectado, os
+          valores das bombas permanecem em zero.
         </p>
       )}
     </div>

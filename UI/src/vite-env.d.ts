@@ -1,36 +1,19 @@
 /// <reference types="vite/client" />
 
-type SerialOptions = {
-  baudRate: number;
-  dataBits?: 7 | 8;
-  stopBits?: 1 | 2;
-  parity?: "none" | "even" | "odd";
-  bufferSize?: number;
-  flowControl?: "none" | "hardware";
+type ComPortInfo = {
+  path: string;
+  label: string;
 };
 
-type SerialPortInfo = {
-  usbVendorId?: number;
-  usbProductId?: number;
+type DesktopSerialApi = {
+  listPorts: () => Promise<ComPortInfo[]>;
+  connect: (portPath: string) => Promise<void>;
+  disconnect: () => Promise<void>;
+  write: (line: string) => Promise<void>;
+  onData: (handler: (line: string) => void) => () => void;
+  onClosed: (handler: (reason: string) => void) => () => void;
 };
 
-interface SerialPort {
-  readonly readable: ReadableStream<Uint8Array> | null;
-  readonly writable: WritableStream<Uint8Array> | null;
-  open(options: SerialOptions): Promise<void>;
-  close(): Promise<void>;
-  getInfo(): SerialPortInfo;
-}
-
-interface SerialPortRequestOptions {
-  filters?: Array<{ usbVendorId?: number; usbProductId?: number }>;
-}
-
-interface Serial {
-  requestPort(options?: SerialPortRequestOptions): Promise<SerialPort>;
-  getPorts(): Promise<SerialPort[]>;
-}
-
-interface Navigator {
-  serial?: Serial;
+interface Window {
+  bomba?: DesktopSerialApi;
 }

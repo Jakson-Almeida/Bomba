@@ -1,142 +1,82 @@
-import { BAUD_RATE } from "./calibration";
-import { parseLine, type ParsedLine } from "./protocol";
+export type ComPort = {
+  path: string;
+  label: string;
+};
 
 export function serialSupported() {
-  return typeof navigator !== "undefined" && Boolean(navigator.serial);
+  return typeof window !== "undefined" && Boolean(window.bomba);
 }
 
 export async function listSerialPorts() {
-  if (!navigator.serial) {
+  if (!window.bomba) {
     return [];
   }
-  return navigator.serial.getPorts();
-}
-
-export async function requestSerialPort() {
-  if (!navigator.serial) {
-    throw new Error("Este navegador não expõe portas COM. Use Chrome ou Edge.");
-  }
-  return navigator.serial.requestPort();
-}
-
-export function describePort(port: SerialPort) {
-  const info = port.getInfo();
-  if (info.usbVendorId && info.usbProductId) {
-    const vid = info.usbVendorId.toString(16).padStart(4, "0");
-    const pid = info.usbProductId.toString(16).padStart(4, "0");
-    return `USB ${vid}:${pid}`;
-  }
-  return "Porta COM";
+  return window.bomba.listPorts();
 }
 
 type SerialClientOptions = {
-  onLine: (line: ParsedLine) => void;
+  onLine: (raw: string) => void;
   onDisconnect: (reason: string) => void;
 };
 
 export class SerialClient {
-  private port: SerialPort | null = null;
-  private reader: ReadableStreamDefaultReader<Uint8Array> | null = null;
-  private writer: WritableStreamDefaultWriter<Uint8Array> | null = null;
-  private closed = true;
-  private leftover = "";
-  private encoder = new TextEncoder();
-  private decoder = new TextDecoder();
+  private stopData: (() => void) | null = null;
+  private stopClosed: (() => void) | null = null;
+  private open = false;
+  private closing = false;
 
   constructor(private options: SerialClientOptions) {}
 
   get connected() {
-    return !this.closed && this.port !== null;
+    return this.open;
   }
 
-  async connect(port: SerialPort) {
-    await this.disconnect();
-    this.port = port;
-    await port.open({ baudRate: BAUD_RATE });
-    if (!port.readable || !port.writable) {
-      await port.close();
-      throw new Error("A porta COM não abriu leitura/escrita.");
+  async connect(portPath: string) {
+    if (!window.bomba) {
+      throw new Error("Abra o aplicativo desktop para usar a porta COM.");
     }
-    this.reader = port.readable.getReader();
-    this.writer = port.writable.getWriter();
-    this.closed = false;
-    this.leftover = "";
-    this.readLoop().catch((error) => {
-      this.options.onDisconnect(
-        error instanceof Error ? error.message : "Conexão serial encerrada.",
-      );
+    await this.disconnect();
+    this.closing = false;
+    await window.bomba.connect(portPath);
+    this.open = true;
+    this.stopData = window.bomba.onData((line) => {
+      this.options.onLine(line);
+    });
+    this.stopClosed = window.bomba.onClosed((reason) => {
+      if (this.closing) {
+        return;
+      }
+      this.open = false;
+      this.clearListeners();
+      this.options.onDisconnect(reason);
     });
   }
 
   async write(line: string) {
-    if (!this.writer || this.closed) {
+    if (!window.bomba || !this.open) {
       throw new Error("Arduino desconectado.");
     }
-    await this.writer.write(this.encoder.encode(`${line}\n`));
+    await window.bomba.write(line);
   }
 
   async disconnect() {
-    this.closed = true;
-    const reader = this.reader;
-    const writer = this.writer;
-    const port = this.port;
-    this.reader = null;
-    this.writer = null;
-    this.port = null;
-    try {
-      await reader?.cancel();
-    } catch {
-      /* ignore */
+    this.closing = true;
+    this.open = false;
+    this.clearListeners();
+    if (!window.bomba) {
+      return;
     }
     try {
-      reader?.releaseLock();
-    } catch {
-      /* ignore */
-    }
-    try {
-      await writer?.close();
-    } catch {
-      /* ignore */
-    }
-    try {
-      writer?.releaseLock();
-    } catch {
-      /* ignore */
-    }
-    try {
-      await port?.close();
+      await window.bomba.disconnect();
     } catch {
       /* ignore */
     }
   }
 
-  private async readLoop() {
-    if (!this.reader) {
-      return;
-    }
-    try {
-      while (!this.closed) {
-        const { value, done } = await this.reader.read();
-        if (done) {
-          break;
-        }
-        if (!value) {
-          continue;
-        }
-        this.leftover += this.decoder.decode(value, { stream: true });
-        const chunks = this.leftover.split(/\r?\n/);
-        this.leftover = chunks.pop() ?? "";
-        for (const chunk of chunks) {
-          const parsed = parseLine(chunk);
-          if (parsed) {
-            this.options.onLine(parsed);
-          }
-        }
-      }
-    } finally {
-      if (!this.closed) {
-        this.options.onDisconnect("A porta COM foi fechada.");
-      }
-    }
+  private clearListeners() {
+    this.stopData?.();
+    this.stopClosed?.();
+    this.stopData = null;
+    this.stopClosed = null;
   }
 }
