@@ -1,6 +1,6 @@
 // ===============================
 // ESP32-S3 + L298N + G328
-// Teste PWM do motor
+// Teste básico do motor
 // ===============================
 
 const int ENA = 3;
