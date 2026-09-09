@@ -43,6 +43,7 @@ void setup() {
 }
 
 void loop() {
+  digitalWrite(IN2, LOW);
   // Fade light inside a loop
   for (int dutyCycle = 0; dutyCycle <= 255; dutyCycle++) {
     ledcWrite(IN1, dutyCycle); // Change the brightness
@@ -51,6 +52,16 @@ void loop() {
 
   for (int dutyCycle = 255; dutyCycle >= 0; dutyCycle--) {
     ledcWrite(IN1, dutyCycle); // Change the brightness
+    delay(10); 
+  }
+  digitalWrite(IN1, LOW);
+  for (int dutyCycle = 0; dutyCycle <= 255; dutyCycle++) {
+    ledcWrite(IN2, dutyCycle); // Change the brightness
+    delay(10);                    // The ESP32 waits 10 milliseconds before changing it again
+  }
+
+  for (int dutyCycle = 255; dutyCycle >= 0; dutyCycle--) {
+    ledcWrite(IN2, dutyCycle); // Change the brightness
     delay(10); 
   }
 }
