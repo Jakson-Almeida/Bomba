@@ -1,9 +1,23 @@
 const { app, BrowserWindow, ipcMain, Menu } = require("electron");
 const path = require("node:path");
-const { execFile } = require("node:child_process");
+const { execFile, spawn } = require("node:child_process");
 
 let mainWindow = null;
-let connectPath = "";
+let serialChild = null;
+let closingSerial = false;
+
+function sendToRenderer(channel, payload) {
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.webContents.send(channel, payload);
+  }
+}
+
+function normalizeCom(value) {
+  const match = String(value || "")
+    .toUpperCase()
+    .match(/COM\d+/);
+  return match ? match[0] : "";
+}
 
 function execPowerShell(script) {
   return new Promise((resolve, reject) => {
@@ -20,13 +34,6 @@ function execPowerShell(script) {
       },
     );
   });
-}
-
-function normalizeCom(value) {
-  const match = String(value || "")
-    .toUpperCase()
-    .match(/COM\d+/);
-  return match ? match[0] : "";
 }
 
 async function listWindowsComPorts() {
@@ -64,18 +71,128 @@ $ports.GetEnumerator() | Sort-Object Name | ForEach-Object {
   }
 }
 
-function attachSerialHandlers(session) {
-  session.setPermissionCheckHandler((_webContents, permission) => permission === "serial");
-  session.setDevicePermissionHandler((details) => details.deviceType === "serial");
-  session.on("select-serial-port", (event, portList, _webContents, callback) => {
-    event.preventDefault();
-    const wanted = normalizeCom(connectPath);
-    const match = portList.find(
-      (item) =>
-        normalizeCom(item.portName) === wanted ||
-        normalizeCom(item.displayName) === wanted,
+function serialHostPath() {
+  if (app.isPackaged) {
+    return path.join(process.resourcesPath, "serial-host.ps1");
+  }
+  return path.join(__dirname, "serial-host.ps1");
+}
+
+function stopSerialChild() {
+  const child = serialChild;
+  serialChild = null;
+  if (!child || child.killed) {
+    return;
+  }
+  try {
+    child.stdin.write("__CLOSE__\n");
+  } catch {
+    /* ignore */
+  }
+  try {
+    child.kill();
+  } catch {
+    /* ignore */
+  }
+}
+
+async function closeSerial() {
+  closingSerial = true;
+  stopSerialChild();
+}
+
+function openSerial(portPath) {
+  return new Promise((resolve, reject) => {
+    const com = normalizeCom(portPath);
+    if (!com) {
+      reject(new Error("Informe a porta COM."));
+      return;
+    }
+
+    const child = spawn(
+      "powershell.exe",
+      [
+        "-NoProfile",
+        "-STA",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        serialHostPath(),
+        "-PortName",
+        com,
+        "-Baud",
+        "115200",
+      ],
+      { windowsHide: true, stdio: ["pipe", "pipe", "pipe"] },
     );
-    callback(match ? match.portId : "");
+
+    serialChild = child;
+    let leftover = "";
+    let ready = false;
+    let stderrText = "";
+
+    const fail = (message) => {
+      clearTimeout(timer);
+      stopSerialChild();
+      reject(new Error(message));
+    };
+
+    const timer = setTimeout(() => {
+      if (!ready) {
+        fail("Tempo esgotado ao abrir a porta COM. Feche o Monitor Serial da IDE e tente de novo.");
+      }
+    }, 8000);
+
+    child.stdout.setEncoding("utf8");
+    child.stdout.on("data", (chunk) => {
+      leftover += chunk;
+      const lines = leftover.split(/\r?\n/);
+      leftover = lines.pop() ?? "";
+      for (const line of lines) {
+        if (!line) {
+          continue;
+        }
+        if (!ready && line === "__READY__") {
+          ready = true;
+          clearTimeout(timer);
+          resolve();
+          continue;
+        }
+        if (ready) {
+          sendToRenderer("serial:data", line);
+        }
+      }
+    });
+
+    child.stderr.setEncoding("utf8");
+    child.stderr.on("data", (chunk) => {
+      stderrText += chunk;
+    });
+
+    child.on("error", (error) => {
+      if (!ready) {
+        fail(error.message);
+      }
+    });
+
+    child.on("exit", () => {
+      const intentional = closingSerial;
+      serialChild = null;
+      closingSerial = false;
+      if (!ready) {
+        fail(
+          stderrText.trim() ||
+            "Não foi possível abrir a COM. Ela pode estar em uso pelo Arduino IDE.",
+        );
+        return;
+      }
+      if (!intentional) {
+        sendToRenderer(
+          "serial:closed",
+          "A porta COM caiu. No ESP32-S3 o USB reinicia ao abrir a serial; tente Conectar de novo.",
+        );
+      }
+    });
   });
 }
 
@@ -96,8 +213,6 @@ function createWindow() {
     },
   });
 
-  attachSerialHandlers(mainWindow.webContents.session);
-
   const devUrl = process.env.VITE_DEV_SERVER_URL || process.env.ELECTRON_START_URL;
   if (devUrl) {
     mainWindow.loadURL(devUrl);
@@ -114,11 +229,29 @@ function createWindow() {
 
 ipcMain.handle("serial:list", async () => listWindowsComPorts());
 
-ipcMain.handle("serial:prepare", async (_event, portPath) => {
-  connectPath = normalizeCom(portPath) || String(portPath || "");
-  if (!connectPath) {
-    throw new Error("Informe a porta COM.");
+ipcMain.handle("serial:connect", async (_event, portPath) => {
+  await closeSerial();
+  await openSerial(portPath);
+});
+
+ipcMain.handle("serial:disconnect", async () => {
+  await closeSerial();
+});
+
+ipcMain.handle("serial:write", async (_event, line) => {
+  if (!serialChild || !serialChild.stdin.writable) {
+    throw new Error("Arduino desconectado.");
   }
+  const payload = `${String(line).replace(/\n/g, "")}\n`;
+  await new Promise((resolve, reject) => {
+    serialChild.stdin.write(payload, (error) => {
+      if (error) {
+        reject(error);
+        return;
+      }
+      resolve();
+    });
+  });
 });
 
 app.whenReady().then(() => {
@@ -132,7 +265,12 @@ app.whenReady().then(() => {
 });
 
 app.on("window-all-closed", () => {
+  void closeSerial();
   if (process.platform !== "darwin") {
     app.quit();
   }
+});
+
+app.on("before-quit", () => {
+  void closeSerial();
 });

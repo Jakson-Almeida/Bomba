@@ -169,9 +169,6 @@ export function BenchProvider({ children }: { children: ReactNode }) {
           if (line.kind === "hello") {
             helloWaitRef.current?.(true);
             helloWaitRef.current = null;
-            if (connectedRef.current) {
-              setSetpoints(createEmptyState());
-            }
             return;
           }
           if (line.kind === "error") {
@@ -194,7 +191,7 @@ export function BenchProvider({ children }: { children: ReactNode }) {
 
         const hello = new Promise<boolean>((resolve) => {
           helloWaitRef.current = resolve;
-          window.setTimeout(() => resolve(false), 1500);
+          window.setTimeout(() => resolve(false), 4000);
         });
         await client.write(commands.hello());
         const ok = await hello;
@@ -206,10 +203,9 @@ export function BenchProvider({ children }: { children: ReactNode }) {
 
         connectedRef.current = true;
         setConnected(true);
-        setSetpoints(createEmptyState());
         await client.write(commands.get());
         heartbeatRef.current = window.setInterval(() => {
-          void send(commands.hello());
+          void send(commands.get());
         }, 1500);
         await refreshPorts();
       } catch (caught) {

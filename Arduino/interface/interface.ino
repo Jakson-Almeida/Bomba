@@ -207,7 +207,11 @@ void handleLine(char* line) {
 
 void setup() {
   Serial.begin(115200);
-  delay(300);
+  unsigned long started = millis();
+  while (!Serial && (millis() - started) < 2000) {
+    delay(10);
+  }
+  delay(200);
 
   for (int i = 0; i < MOTOR_COUNT; i++) {
     pinMode(PINS[i].ena, OUTPUT);

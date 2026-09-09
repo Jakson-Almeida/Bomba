@@ -44,6 +44,12 @@
       "package.json"
     ],
     "npmRebuild": false,
+    "extraResources": [
+      {
+        "from": "electron/serial-host.ps1",
+        "to": "serial-host.ps1"
+      }
+    ],
     "win": {
       "target": [
         {

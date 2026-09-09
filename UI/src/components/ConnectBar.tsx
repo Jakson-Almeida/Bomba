@@ -65,7 +65,7 @@ export function ConnectBar() {
                 disabled={connecting || !path}
                 className="rounded-[10px] bg-run px-3 py-2 text-[12px] leading-none font-medium text-run-foreground ring-1 ring-run/30 active:opacity-90 disabled:opacity-40"
               >
-                {connecting ? "Abrindo…" : "Conectar"}
+                {connecting ? "Conectando…" : "Conectar"}
               </button>
             )}
             <button

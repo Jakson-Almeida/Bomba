@@ -12,29 +12,12 @@ type ComPortInfo = {
 
 type DesktopSerialApi = {
   listPorts: () => Promise<ComPortInfo[]>;
-  prepareConnect: (portPath: string) => Promise<void>;
+  connect: (portPath: string) => Promise<void>;
+  disconnect: () => Promise<void>;
+  write: (line: string) => Promise<void>;
+  onData: (handler: (line: string) => void) => () => void;
+  onClosed: (handler: (reason: string) => void) => () => void;
 };
-
-type SerialOptions = {
-  baudRate: number;
-};
-
-interface SerialPort {
-  readonly readable: ReadableStream<Uint8Array> | null;
-  readonly writable: WritableStream<Uint8Array> | null;
-  open(options: SerialOptions): Promise<void>;
-  close(): Promise<void>;
-  addEventListener(type: "disconnect", listener: () => void): void;
-  removeEventListener(type: "disconnect", listener: () => void): void;
-}
-
-interface Serial {
-  requestPort(): Promise<SerialPort>;
-}
-
-interface Navigator {
-  serial?: Serial;
-}
 
 interface Window {
   bomba?: DesktopSerialApi;
