@@ -1,67 +1,90 @@
 // ===============================
 // ESP32-S3 + L298N + G328
-// Teste PWM do motor
+// PWM dos 2 motores
 // ===============================
 
 const int freq = 5000;      // How fast the signal flashes (5000 Hz)
 const int resolution = 8;  // 8-bit resolution (gives numbers from 0 to 255)
 
-const int ENA = 3;
-const int IN1 = 5;
-const int IN2 = 6;
+struct Motor {
+  const int ENA;
+  const int IN1;
+  const int IN2;
+};
+
 
 void setup() {
 
   Serial.begin(115200);
   delay(1000);
 
+  // Motores
+  struct Motor M4;
+  struct Motor M5;
+
+  M4.ENA=3;
+  M4.IN1=6;
+  M4.IN2=5;
+
+  M5.ENA=8;
+  M5.IN1=15;
+  M5.IN2=16;
+
   // Configura os pinos
-  pinMode(ENA, OUTPUT);
-  pinMode(IN1, OUTPUT);
-  pinMode(IN2, OUTPUT);
+  pinMode(M4.ENA, OUTPUT);
+  pinMode(M5.ENA, OUTPUT);
+  pinMode(M4.IN1, OUTPUT);
+  pinMode(M5.IN1, OUTPUT);
+  pinMode(M4.IN2, OUTPUT);
+  pinMode(M5.IN2, OUTPUT);
 
   // Habilita a ponte H
-  digitalWrite(ENA, HIGH);
+  digitalWrite(M4.ENA, HIGH);
+  digitalWrite(M5.ENA, HIGH);
 
   // Configura PWM
-  ledcAttach(IN1, freq, resolution);
-  ledcAttach(IN2, freq, resolution);
+  ledcAttach(M4.IN1, freq, resolution);
+  ledcAttach(M4.IN2, freq, resolution);~
+  ledcAttach(M5.IN1, freq, resolution);
+  ledcAttach(M5.IN2, freq, resolution);
 
   // Define o sentido de rotação
-  digitalWrite(IN1, HIGH);
-  digitalWrite(IN2, LOW);
+  digitalWrite(M4.IN1, HIGH);
+  digitalWrite(M5.IN1, HIGH);
+  digitalWrite(M4.IN2, LOW);
+  digitalWrite(M5.IN2, LOW);
   Serial.println("Motor ligado!");
   delay(3000);
 
-  // Pausa
-  digitalWrite(IN1, LOW);
-  digitalWrite(IN2, LOW);
-  Serial.println("Motor ligado!");
-  delay(3000);
-
-  // PWM para IN1
+  // PWM para motores
 }
 
 void loop() {
-  digitalWrite(IN2, LOW);
+  digitalWrite(M4.IN2, LOW);
+  digitalWrite(M5.IN2, LOW);
   // Fade light inside a loop
   for (int dutyCycle = 0; dutyCycle <= 255; dutyCycle++) {
-    ledcWrite(IN1, dutyCycle); // Change the brightness
+    ledcWrite(M4.IN1, dutyCycle); // Change the brightness
+    ledcWrite(M5.IN1, dutyCycle); // Change the brightness
     delay(10);                    // The ESP32 waits 10 milliseconds before changing it again
   }
 
   for (int dutyCycle = 255; dutyCycle >= 0; dutyCycle--) {
-    ledcWrite(IN1, dutyCycle); // Change the brightness
+    ledcWrite(M4.IN1, dutyCycle); // Change the brightness
+    ledcWrite(M5.IN1, dutyCycle); // Change the brightness
     delay(10); 
   }
-  //digitalWrite(IN1, LOW);
-  //for (int dutyCycle = 0; dutyCycle <= 255; dutyCycle++) {
-  //  ledcWrite(IN2, dutyCycle); // Change the brightness
-  //  delay(10);                    // The ESP32 waits 10 milliseconds before changing it again
-  //}
+  digitalWrite(M4.IN1, LOW);
+  digitalWrite(M5.IN1, LOW);
+  for (int dutyCycle = 0; dutyCycle <= 255; dutyCycle++) {
+    ledcWrite(M4.IN2, dutyCycle); // Change the brightness
+    ledcWrite(M5.IN2, dutyCycle); // Change the brightness
+    delay(10);                    // The ESP32 waits 10 milliseconds before changing it again
+  }
 
-  //for (int dutyCycle = 255; dutyCycle >= 0; dutyCycle--) {
-  //  ledcWrite(IN2, dutyCycle); // Change the brightness
-  //  delay(10); 
-  //}
+  for (int dutyCycle = 255; dutyCycle >= 0; dutyCycle--) {
+    ledcWrite(M4.IN2, dutyCycle); // Change the brightness
+    ledcWrite(M5.IN2, dutyCycle); // Change the brightness
+    delay(10); 
+  }
 }
