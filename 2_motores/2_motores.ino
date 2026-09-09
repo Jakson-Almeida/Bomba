@@ -73,17 +73,5 @@ void loop() {
     ledcWrite(M5.IN1, dutyCycle); // Change the brightness
     delay(10); 
   }
-  digitalWrite(M4.IN1, LOW);
-  digitalWrite(M5.IN1, LOW);
-  for (int dutyCycle = 0; dutyCycle <= 255; dutyCycle++) {
-    ledcWrite(M4.IN2, dutyCycle); // Change the brightness
-    ledcWrite(M5.IN2, dutyCycle); // Change the brightness
-    delay(10);                    // The ESP32 waits 10 milliseconds before changing it again
-  }
 
-  for (int dutyCycle = 255; dutyCycle >= 0; dutyCycle--) {
-    ledcWrite(M4.IN2, dutyCycle); // Change the brightness
-    ledcWrite(M5.IN2, dutyCycle); // Change the brightness
-    delay(10); 
-  }
 }
