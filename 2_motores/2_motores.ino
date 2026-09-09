@@ -7,20 +7,19 @@ const int freq = 5000;      // How fast the signal flashes (5000 Hz)
 const int resolution = 8;  // 8-bit resolution (gives numbers from 0 to 255)
 
 struct Motor {
-  const int ENA;
-  const int IN1;
-  const int IN2;
+  int ENA;
+  int IN1;
+  int IN2;
 };
 
+// Motores
+struct Motor M4;
+struct Motor M5;
 
 void setup() {
 
   Serial.begin(115200);
   delay(1000);
-
-  // Motores
-  struct Motor M4;
-  struct Motor M5;
 
   M4.ENA=3;
   M4.IN1=6;
