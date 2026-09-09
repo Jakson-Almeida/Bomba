@@ -1,10 +1,11 @@
 import {
   MOTOR_COUNT,
   createDefaultCalibrations,
+  sanitizeCalibration,
   type Calibration,
 } from "./calibration";
 
-const STORAGE_KEY = "bomba.calibration.v1";
+const STORAGE_KEY = "bomba.calibration.v2";
 
 export function loadCalibrations(): Calibration[] {
   const fallback = createDefaultCalibrations();
@@ -17,15 +18,17 @@ export function loadCalibrations(): Calibration[] {
     if (!Array.isArray(parsed) || parsed.length !== MOTOR_COUNT) {
       return fallback;
     }
-    return parsed.map((item, index) => ({
-      a: Number.isFinite(item?.a) ? item.a : fallback[index].a,
-      b: Number.isFinite(item?.b) ? item.b : fallback[index].b,
-    }));
+    return parsed.map((item, index) =>
+      sanitizeCalibration(item ?? fallback[index]),
+    );
   } catch {
     return fallback;
   }
 }
 
 export function saveCalibrations(calibrations: Calibration[]) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(calibrations));
+  localStorage.setItem(
+    STORAGE_KEY,
+    JSON.stringify(calibrations.map((item) => sanitizeCalibration(item))),
+  );
 }

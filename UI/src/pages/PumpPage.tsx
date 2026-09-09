@@ -2,7 +2,10 @@ import { Link, useParams } from "@tanstack/react-router";
 import { ConnectBar } from "../components/ConnectBar";
 import { StatusStrip } from "../components/StatusStrip";
 import { useBench } from "../context/BenchContext";
-import type { PumpDirection } from "../lib/calibration";
+import {
+  maxFlowFromCalibration,
+  type PumpDirection,
+} from "../lib/calibration";
 
 export function PumpPage() {
   const { id } = useParams({ from: "/bomba/$id" });
@@ -16,6 +19,7 @@ export function PumpPage() {
     setCalibration,
   } = useBench();
   const pump = pumps.find((item) => item.id === Number(id));
+  const maxFlow = pump ? maxFlowFromCalibration(pump.calibration) : 0;
 
   if (!pump) {
     return (
@@ -98,9 +102,9 @@ export function PumpPage() {
           <input
             type="range"
             min={0}
-            max={300}
+            max={Math.max(1, maxFlow)}
             step={0.5}
-            value={Math.min(300, pump.speed)}
+            value={Math.min(maxFlow, pump.speed)}
             disabled={!connected}
             aria-label="Velocidade estimada da bomba"
             onChange={(event) => setFlow(pump.id, Number(event.target.value))}
@@ -170,17 +174,37 @@ export function PumpPage() {
 
         <div className="mt-8 rounded-[14px] bg-foreground/4 p-4 ring-1 ring-border">
           <p className="text-[11px] tracking-[0.15em] text-muted-foreground uppercase">
-            Calibração de 1º grau
+            Calibração com zona morta
           </p>
-          <p className="mt-2 font-mono text-[12px] text-faint">
-            Q (mL/min) = a × PWM% + b
+          <p className="mt-2 font-mono text-[12px] leading-relaxed text-faint">
+            Q = 0 se PWM &lt; PWM₀
+            <br />
+            Q = a × (PWM − PWM₀) se PWM ≥ PWM₀
           </p>
           <div className="mt-3 grid grid-cols-2 gap-3">
             <label className="text-[11px] text-muted-foreground">
-              a
+              PWM₀ (%)
               <input
                 className="field-light mt-1"
                 type="number"
+                min={0}
+                max={99.9}
+                step="0.1"
+                value={pump.calibration.pwm0}
+                onChange={(event) =>
+                  setCalibration(pump.id, {
+                    ...pump.calibration,
+                    pwm0: Number(event.target.value),
+                  })
+                }
+              />
+            </label>
+            <label className="text-[11px] text-muted-foreground">
+              a (mL/min / %)
+              <input
+                className="field-light mt-1"
+                type="number"
+                min={0}
                 step="0.01"
                 value={pump.calibration.a}
                 onChange={(event) =>
@@ -191,25 +215,12 @@ export function PumpPage() {
                 }
               />
             </label>
-            <label className="text-[11px] text-muted-foreground">
-              b
-              <input
-                className="field-light mt-1"
-                type="number"
-                step="0.01"
-                value={pump.calibration.b}
-                onChange={(event) =>
-                  setCalibration(pump.id, {
-                    ...pump.calibration,
-                    b: Number(event.target.value),
-                  })
-                }
-              />
-            </label>
           </div>
           <p className="mt-3 text-[12px] text-muted-foreground">
-            Sem sensor de fluxo, a vazão exibida é estimada por essa reta a partir
-            do PWM percentual.
+            PWM₀ é o limiar em que a bomba começa a mover. Acima disso, a vazão
+            estimada sobe em reta. Sem sensor, meça o volume em alguns PWM acima
+            do limiar para achar a. Em 100% ≈{" "}
+            {maxFlow.toFixed(1)} mL/min.
           </p>
         </div>
       </section>

@@ -13,7 +13,7 @@ O aplicativo já está publicado. Não precisa clonar o repositório nem instala
 
 Pronto: ligue, ajuste PWM, sentido e velocidade pelo painel.
 
-Enquanto o cabo estiver desconectado, os valores na tela ficam em zero. Cada bomba tem uma página própria (**Abrir**), com calibração da vazão estimada (`Q = a × PWM% + b`), já que ainda não há sensor de fluxo.
+Enquanto o cabo estiver desconectado, os valores na tela ficam em zero. Cada bomba tem uma página própria (**Abrir**), com calibração da vazão estimada: zero abaixo do limiar PWM₀ e `Q = a × (PWM − PWM₀)` acima dele, já que ainda não há sensor de fluxo.
 
 ## Como o projeto está organizado
 

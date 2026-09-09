@@ -15,6 +15,7 @@ import {
   flowFromPwm,
   pwmFromFlow,
   pumpName,
+  sanitizeCalibration,
   type Calibration,
   type PumpDirection,
   type PumpSetpoint,
@@ -286,7 +287,8 @@ export function BenchProvider({ children }: { children: ReactNode }) {
         return;
       }
       const enabled = !current.enabled;
-      const pwm = enabled && current.pwm === 0 ? 20 : current.pwm;
+      const pwm0 = calibrations[id - 1]?.pwm0 ?? 0;
+      const pwm = enabled && current.pwm === 0 ? pwm0 : current.pwm;
       setSetpoints((pumps) =>
         pumps.map((pump, index) =>
           index === id - 1 ? { ...pump, enabled, pwm } : pump,
@@ -297,13 +299,13 @@ export function BenchProvider({ children }: { children: ReactNode }) {
       }
       void send(commands.enable(id, enabled));
     },
-    [send, setpoints],
+    [calibrations, send, setpoints],
   );
 
   const setCalibration = useCallback((id: number, calibration: Calibration) => {
     setCalibrations((current) => {
       const next = current.map((item, index) =>
-        index === id - 1 ? calibration : item,
+        index === id - 1 ? sanitizeCalibration(calibration) : item,
       );
       saveCalibrations(next);
       return next;

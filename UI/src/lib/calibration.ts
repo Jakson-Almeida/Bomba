@@ -13,10 +13,10 @@ export type PumpSetpoint = {
 
 export type Calibration = {
   a: number;
-  b: number;
+  pwm0: number;
 };
 
-export const DEFAULT_CALIBRATION: Calibration = { a: 3, b: 0 };
+export const DEFAULT_CALIBRATION: Calibration = { a: 3, pwm0: 70 };
 
 export function clampPwm(value: number) {
   if (!Number.isFinite(value)) {
@@ -25,15 +25,42 @@ export function clampPwm(value: number) {
   return Math.min(100, Math.max(0, value));
 }
 
+export function clampPwm0(value: number) {
+  if (!Number.isFinite(value)) {
+    return DEFAULT_CALIBRATION.pwm0;
+  }
+  return Math.min(99.9, Math.max(0, value));
+}
+
+export function sanitizeCalibration(value: Partial<Calibration> | null | undefined): Calibration {
+  const rawA = value?.a;
+  const a = Number.isFinite(rawA) ? Math.max(0, rawA as number) : DEFAULT_CALIBRATION.a;
+  return {
+    a,
+    pwm0: clampPwm0(value?.pwm0 ?? DEFAULT_CALIBRATION.pwm0),
+  };
+}
+
 export function flowFromPwm(pwm: number, calibration: Calibration) {
-  return calibration.a * pwm + calibration.b;
+  const { a, pwm0 } = sanitizeCalibration(calibration);
+  const duty = clampPwm(pwm);
+  if (duty < pwm0 || a <= 0) {
+    return 0;
+  }
+  return a * (duty - pwm0);
+}
+
+export function maxFlowFromCalibration(calibration: Calibration) {
+  const { a, pwm0 } = sanitizeCalibration(calibration);
+  return Math.max(0, a * (100 - pwm0));
 }
 
 export function pwmFromFlow(flow: number, calibration: Calibration) {
-  if (Math.abs(calibration.a) < 1e-9) {
+  const { a, pwm0 } = sanitizeCalibration(calibration);
+  if (!Number.isFinite(flow) || flow <= 0 || a <= 0) {
     return 0;
   }
-  return clampPwm((flow - calibration.b) / calibration.a);
+  return clampPwm(pwm0 + flow / a);
 }
 
 export function pumpName(id: number) {
