@@ -2,6 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { ConnectBar } from "../components/ConnectBar";
 import { StatusStrip } from "../components/StatusStrip";
 import { useBench } from "../context/BenchContext";
+import logo from "../assets/logo.png";
 
 export function IndexPage() {
   const {
@@ -18,17 +19,24 @@ export function IndexPage() {
     <div className="mx-auto flex min-h-[100dvh] w-full max-w-6xl flex-col">
       <StatusStrip />
       <header className="px-5 pt-2 pb-4">
-        <div className="min-w-0">
-          <p className="text-[11px] tracking-[0.3em] text-faint uppercase">
-            Peristaltic Array
-          </p>
-          <h1 className="mt-1 text-[28px] leading-none font-semibold text-balance">
-            Bombas de Fluxo
-          </h1>
-          <p className="mt-2 text-[13px] text-muted-foreground">
-            {activeCount} ativas · {pumps.length - activeCount} paradas · PWM 12
-            bits
-          </p>
+        <div className="flex min-w-0 items-end gap-3">
+          <img
+            src={logo}
+            alt="Painel de Bombas"
+            className="size-12 shrink-0 rounded-[14px] ring-1 ring-border"
+          />
+          <div className="min-w-0">
+            <p className="text-[11px] tracking-[0.3em] text-faint uppercase">
+              Peristaltic Array
+            </p>
+            <h1 className="mt-1 text-[28px] leading-none font-semibold text-balance">
+              Bombas de Fluxo
+            </h1>
+            <p className="mt-2 text-[13px] text-muted-foreground">
+              {activeCount} ativas · {pumps.length - activeCount} paradas · PWM 12
+              bits
+            </p>
+          </div>
         </div>
       </header>
 

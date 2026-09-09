@@ -3,3 +3,4 @@ UI/node_modules/
 UI/dist/
 UI/dist-electron/
 UI/release/
+UI/build/icons/

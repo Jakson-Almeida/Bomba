@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useBench } from "../context/BenchContext";
+import logo from "../assets/logo.png";
 
 export function StatusStrip() {
   const { connected, portLabel } = useBench();
@@ -22,6 +23,11 @@ export function StatusStrip() {
   return (
     <div className="flex items-center justify-between px-5 pt-4 pb-2">
       <div className="flex min-w-0 items-center gap-2">
+        <img
+          src={logo}
+          alt=""
+          className="size-5 shrink-0 rounded-[6px] ring-1 ring-border"
+        />
         <span
           className={
             connected

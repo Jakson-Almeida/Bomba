@@ -1,42 +1,82 @@
 const { app, BrowserWindow, ipcMain, Menu } = require("electron");
 const path = require("node:path");
-const { SerialPort } = require("serialport");
-const { ReadlineParser } = require("@serialport/parser-readline");
-
-const BAUD_RATE = 115200;
+const { execFile } = require("node:child_process");
 
 let mainWindow = null;
-let serialPort = null;
-let serialParser = null;
-let closingSerial = false;
+let connectPath = "";
 
-function sendToRenderer(channel, payload) {
-  if (mainWindow && !mainWindow.isDestroyed()) {
-    mainWindow.webContents.send(channel, payload);
+function execPowerShell(script) {
+  return new Promise((resolve, reject) => {
+    execFile(
+      "powershell.exe",
+      ["-NoProfile", "-NonInteractive", "-Command", script],
+      { windowsHide: true, timeout: 10000 },
+      (error, stdout) => {
+        if (error) {
+          reject(error);
+          return;
+        }
+        resolve(String(stdout || "").trim());
+      },
+    );
+  });
+}
+
+function normalizeCom(value) {
+  const match = String(value || "")
+    .toUpperCase()
+    .match(/COM\d+/);
+  return match ? match[0] : "";
+}
+
+async function listWindowsComPorts() {
+  const script = `
+$ErrorActionPreference = 'SilentlyContinue'
+$ports = @{}
+Get-CimInstance Win32_PnPEntity | Where-Object { $_.Name -match '\\(COM\\d+\\)' } | ForEach-Object {
+  $id = [regex]::Match($_.Name, 'COM\\d+').Value
+  if ($id) { $ports[$id] = $_.Name }
+}
+try {
+  [System.IO.Ports.SerialPort]::GetPortNames() | ForEach-Object {
+    if (-not $ports.ContainsKey($_)) { $ports[$_] = $_ }
+  }
+} catch {}
+$ports.GetEnumerator() | Sort-Object Name | ForEach-Object {
+  [pscustomobject]@{ path = $_.Key; label = $_.Value }
+} | ConvertTo-Json -Compress
+`;
+  try {
+    const raw = await execPowerShell(script);
+    if (!raw) {
+      return [];
+    }
+    const parsed = JSON.parse(raw);
+    const rows = Array.isArray(parsed) ? parsed : [parsed];
+    return rows
+      .map((row) => ({
+        path: normalizeCom(row.path) || String(row.path || ""),
+        label: String(row.label || row.path || ""),
+      }))
+      .filter((row) => row.path);
+  } catch {
+    return [];
   }
 }
 
-async function closeSerial() {
-  const current = serialPort;
-  serialPort = null;
-  serialParser = null;
-  if (!current) {
-    return;
-  }
-  closingSerial = true;
-  try {
-    if (current.isOpen) {
-      await new Promise((resolve) => {
-        current.write("X\n", () => resolve());
-      });
-    }
-  } catch {
-    /* ignore */
-  }
-  await new Promise((resolve) => {
-    current.close(() => resolve());
+function attachSerialHandlers(session) {
+  session.setPermissionCheckHandler((_webContents, permission) => permission === "serial");
+  session.setDevicePermissionHandler((details) => details.deviceType === "serial");
+  session.on("select-serial-port", (event, portList, _webContents, callback) => {
+    event.preventDefault();
+    const wanted = normalizeCom(connectPath);
+    const match = portList.find(
+      (item) =>
+        normalizeCom(item.portName) === wanted ||
+        normalizeCom(item.displayName) === wanted,
+    );
+    callback(match ? match.portId : "");
   });
-  closingSerial = false;
 }
 
 function createWindow() {
@@ -47,6 +87,7 @@ function createWindow() {
     minHeight: 640,
     title: "Painel de Bombas Peristálticas",
     backgroundColor: "#f3f6fb",
+    icon: path.join(__dirname, "icon.ico"),
     webPreferences: {
       preload: path.join(__dirname, "preload.cjs"),
       contextIsolation: true,
@@ -55,11 +96,15 @@ function createWindow() {
     },
   });
 
+  attachSerialHandlers(mainWindow.webContents.session);
+
   const devUrl = process.env.VITE_DEV_SERVER_URL || process.env.ELECTRON_START_URL;
   if (devUrl) {
     mainWindow.loadURL(devUrl);
   } else {
-    mainWindow.loadFile(path.join(__dirname, "..", "dist", "index.html"));
+    mainWindow.loadFile(path.join(__dirname, "..", "dist", "index.html"), {
+      hash: "/",
+    });
   }
 
   mainWindow.on("closed", () => {
@@ -67,84 +112,13 @@ function createWindow() {
   });
 }
 
-ipcMain.handle("serial:list", async () => {
-  const ports = await SerialPort.list();
-  return ports.map((port) => ({
-    path: port.path,
-    label: [port.path, port.friendlyName || port.manufacturer]
-      .filter(Boolean)
-      .filter((value, index, all) => all.indexOf(value) === index)
-      .join(" — "),
-  }));
-});
+ipcMain.handle("serial:list", async () => listWindowsComPorts());
 
-ipcMain.handle("serial:connect", async (_event, portPath) => {
-  if (!portPath || typeof portPath !== "string") {
+ipcMain.handle("serial:prepare", async (_event, portPath) => {
+  connectPath = normalizeCom(portPath) || String(portPath || "");
+  if (!connectPath) {
     throw new Error("Informe a porta COM.");
   }
-  await closeSerial();
-
-  const port = new SerialPort({
-    path: portPath,
-    baudRate: BAUD_RATE,
-    autoOpen: false,
-  });
-
-  await new Promise((resolve, reject) => {
-    port.open((error) => {
-      if (error) {
-        reject(error);
-        return;
-      }
-      resolve();
-    });
-  });
-
-  const parser = port.pipe(new ReadlineParser({ delimiter: "\n" }));
-  parser.on("data", (line) => {
-    sendToRenderer("serial:data", String(line).replace(/\r/g, ""));
-  });
-  port.on("close", () => {
-    serialPort = null;
-    serialParser = null;
-    if (!closingSerial) {
-      sendToRenderer("serial:closed", "A porta COM foi fechada.");
-    }
-  });
-  port.on("error", (error) => {
-    if (!closingSerial) {
-      sendToRenderer("serial:closed", error.message || "Erro na porta COM.");
-    }
-  });
-
-  serialPort = port;
-  serialParser = parser;
-});
-
-ipcMain.handle("serial:disconnect", async () => {
-  await closeSerial();
-});
-
-ipcMain.handle("serial:write", async (_event, line) => {
-  if (!serialPort || !serialPort.isOpen) {
-    throw new Error("Arduino desconectado.");
-  }
-  const payload = `${String(line).replace(/\n/g, "")}\n`;
-  await new Promise((resolve, reject) => {
-    serialPort.write(payload, (error) => {
-      if (error) {
-        reject(error);
-        return;
-      }
-      serialPort.drain((drainError) => {
-        if (drainError) {
-          reject(drainError);
-          return;
-        }
-        resolve();
-      });
-    });
-  });
 });
 
 app.whenReady().then(() => {
@@ -158,13 +132,7 @@ app.whenReady().then(() => {
 });
 
 app.on("window-all-closed", () => {
-  void closeSerial().finally(() => {
-    if (process.platform !== "darwin") {
-      app.quit();
-    }
-  });
-});
-
-app.on("before-quit", () => {
-  void closeSerial();
+  if (process.platform !== "darwin") {
+    app.quit();
+  }
 });
