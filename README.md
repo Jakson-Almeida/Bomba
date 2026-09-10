@@ -1,10 +1,10 @@
 # Bomba
 
-Painel da bancada de **bombas peristálticas**: o computador fala com o ESP32 pelo cabo USB e controla até 6 bombas (ligar, sentido e velocidade).
+Painel da bancada de **bombas peristálticas**: o computador comunica com o ESP32 pelo cabo USB e controla até 6 bombas (ligar, sentido e velocidade).
 
 ## Baixar e usar no Windows
 
-O aplicativo já está publicado. Não precisa clonar o repositório nem instalar Node.
+O aplicativo já está disponível para baixar. Não precisa clonar o repositório nem instalar Node localmente.
 
 1. Abra a [página de releases](https://github.com/Jakson-Almeida/Bomba/releases/latest) e baixe o instalador **Painel de Bombas** para Windows.
 2. Instale e abra o app.
