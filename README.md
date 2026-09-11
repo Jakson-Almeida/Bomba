@@ -8,7 +8,7 @@ O aplicativo já está disponível para baixar. Não precisa clonar o repositór
 
 1. Abra a [página de releases](https://github.com/Jakson-Almeida/Bomba/releases/latest) e baixe o instalador **Painel de Bombas** para Windows.
 2. Instale e abra o app.
-3. Grave no ESP32 o sketch **Arduino/interface** (só na primeira vez, ou quando o firmware mudar).
+3. Grave no ESP32 o sketch **Arduino/interface** (L298N) ou **Arduino/interface_TB** (TB6612FNG), só na primeira vez ou quando o firmware mudar.
 4. Ligue a placa no PC pelo USB, escolha a porta COM e clique em **Conectar**.
 
 Pronto: ligue, ajuste PWM, sentido e velocidade pelo painel.
@@ -18,8 +18,9 @@ Enquanto o cabo estiver desconectado, os valores na tela ficam em zero. Cada bom
 ## Como o projeto está organizado
 
 - **Arduino/** — programas da placa
-  - **interface/** — o programa que deve ir para o ESP32 no dia a dia. É ele que liga as bombas e conversa com o painel no PC.
-  - **motor/**, **motor_teste/** e **2_motores/** — testes antigos, úteis só na montagem e no debug.
+  - **interface/** — o programa diário com a ponte L298N.
+  - **interface_TB/** — o mesmo protocolo serial, para a ponte TB6612FNG.
+  - **motor/**, **motor_teste/**, **2_motores/** e **2_motores_TB/** — testes de montagem e debug.
 - **UI/** — código do aplicativo de computador.
 - **exemplo/** — cópia de referência do visual; não entra no Git e não é o programa que se usa.
 
