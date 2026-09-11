@@ -1,8 +1,10 @@
 import { Link } from "@tanstack/react-router";
+import { AppShell } from "../components/AppShell";
 import { ConnectBar } from "../components/ConnectBar";
-import { StatusStrip } from "../components/StatusStrip";
 import { useBench } from "../context/BenchContext";
+import copasa from "../assets/copasa.png";
 import logo from "../assets/logo.png";
+import ufjf from "../assets/ufjf.png";
 
 export function IndexPage() {
   const {
@@ -16,26 +18,45 @@ export function IndexPage() {
   const activeCount = pumps.filter((pump) => pump.running).length;
 
   return (
-    <div className="mx-auto flex min-h-[100dvh] w-full max-w-6xl flex-col">
-      <StatusStrip />
+    <AppShell wide>
       <header className="px-5 pt-2 pb-4">
-        <div className="flex min-w-0 items-end gap-3">
-          <img
-            src={logo}
-            alt="Painel de Bombas"
-            className="size-12 shrink-0 rounded-[14px] ring-1 ring-border"
-          />
-          <div className="min-w-0">
-            <p className="text-[11px] tracking-[0.3em] text-faint uppercase">
-              Peristaltic Array
-            </p>
-            <h1 className="mt-1 text-[28px] leading-none font-semibold text-balance">
-              Bombas de Fluxo
-            </h1>
-            <p className="mt-2 text-[13px] text-muted-foreground">
-              {activeCount} ativas · {pumps.length - activeCount} paradas · PWM 12
-              bits
-            </p>
+        <div className="flex flex-wrap items-end justify-between gap-4">
+          <div className="flex min-w-0 items-end gap-3">
+            <img
+              src={logo}
+              alt="Painel de Bombas"
+              className="size-12 shrink-0 rounded-[14px] ring-1 ring-border"
+            />
+            <div className="min-w-0">
+              <p className="text-[11px] tracking-[0.3em] text-faint uppercase">
+                Laboratório Litel · UFJF
+              </p>
+              <h1 className="mt-1 text-[28px] leading-none font-semibold text-balance">
+                Painel de Bombas
+              </h1>
+              <p className="mt-2 text-[13px] text-muted-foreground">
+                Bancada de bombas peristálticas · {activeCount} ativas ·{" "}
+                {pumps.length - activeCount} paradas
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-4">
+            <img
+              src={ufjf}
+              alt="UFJF"
+              className="h-12 w-auto object-contain"
+            />
+            <span className="h-10 w-px bg-border" />
+            <div className="text-right">
+              <p className="text-[10px] tracking-[0.16em] text-faint uppercase">
+                Projeto
+              </p>
+              <img
+                src={copasa}
+                alt="Copasa"
+                className="mt-1 h-7 w-auto object-contain"
+              />
+            </div>
           </div>
         </div>
       </header>
@@ -81,7 +102,7 @@ export function IndexPage() {
         </div>
       </div>
 
-      <div className="grid flex-1 grid-cols-1 gap-3 px-4 py-4 pb-10 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid flex-1 grid-cols-1 gap-3 px-4 py-4 pb-6 sm:grid-cols-2 lg:grid-cols-3">
         {pumps.map((pump) => (
           <Link
             key={pump.id}
@@ -155,6 +176,6 @@ export function IndexPage() {
           </Link>
         ))}
       </div>
-    </div>
+    </AppShell>
   );
 }

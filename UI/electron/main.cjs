@@ -202,8 +202,8 @@ function createWindow() {
     height: 840,
     minWidth: 900,
     minHeight: 640,
-    title: "Painel de Bombas Peristálticas",
-    backgroundColor: "#f3f6fb",
+    title: "Painel de Bombas · Litel UFJF",
+    backgroundColor: "#eef3f9",
     icon: path.join(__dirname, "icon.ico"),
     webPreferences: {
       preload: path.join(__dirname, "preload.cjs"),

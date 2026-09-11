@@ -21,7 +21,7 @@ export function StatusStrip() {
   }, []);
 
   return (
-    <div className="flex items-center justify-between px-5 pt-4 pb-2">
+    <div className="flex items-center justify-between px-5 pt-3 pb-2">
       <div className="flex min-w-0 items-center gap-2">
         <img
           src={logo}
@@ -36,7 +36,8 @@ export function StatusStrip() {
           }
         />
         <span className="truncate text-[11px] font-medium tracking-[0.18em] text-muted-foreground uppercase">
-          Bancada · {connected ? `Online · ${portLabel}` : "Desconectada"}
+          Litel · UFJF ·{" "}
+          {connected ? `Online · ${portLabel}` : "Desconectada"}
         </span>
       </div>
       <span className="shrink-0 font-mono text-[11px] tracking-wider text-faint">

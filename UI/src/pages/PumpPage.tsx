@@ -1,6 +1,6 @@
 import { Link, useParams } from "@tanstack/react-router";
+import { AppShell } from "../components/AppShell";
 import { ConnectBar } from "../components/ConnectBar";
-import { StatusStrip } from "../components/StatusStrip";
 import { useBench } from "../context/BenchContext";
 import {
   maxFlowFromCalibration,
@@ -23,28 +23,29 @@ export function PumpPage() {
 
   if (!pump) {
     return (
-      <div className="grid min-h-[100dvh] place-items-center px-6 text-center">
-        <div>
-          <p className="font-mono text-[11px] tracking-widest text-faint">
-            UNIDADE INEXISTENTE
-          </p>
-          <h1 className="mt-2 text-[20px] font-semibold">
-            Bomba não encontrada
-          </h1>
-          <Link
-            to="/"
-            className="mt-5 inline-block rounded-[12px] bg-foreground/5 px-4 py-2.5 text-[13px] ring-1 ring-border"
-          >
-            Voltar ao painel
-          </Link>
+      <AppShell>
+        <div className="grid flex-1 place-items-center px-6 text-center">
+          <div>
+            <p className="font-mono text-[11px] tracking-widest text-faint">
+              UNIDADE INEXISTENTE
+            </p>
+            <h1 className="mt-2 text-[20px] font-semibold">
+              Bomba não encontrada
+            </h1>
+            <Link
+              to="/"
+              className="mt-5 inline-block rounded-[12px] bg-foreground/5 px-4 py-2.5 text-[13px] ring-1 ring-border"
+            >
+              Voltar ao painel
+            </Link>
+          </div>
         </div>
-      </div>
+      </AppShell>
     );
   }
 
   return (
-    <div className="mx-auto flex min-h-[100dvh] w-full max-w-3xl flex-col">
-      <StatusStrip />
+    <AppShell>
       <ConnectBar />
       <div className="px-5 pt-3 pb-1">
         <Link
@@ -224,6 +225,6 @@ export function PumpPage() {
           </p>
         </div>
       </section>
-    </div>
+    </AppShell>
   );
 }
