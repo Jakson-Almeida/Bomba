@@ -43,7 +43,7 @@ void setup() {
 
   // Configura PWM
   ledcAttach(M4.IN1, freq, resolution);
-  ledcAttach(M4.IN2, freq, resolution);~
+  ledcAttach(M4.IN2, freq, resolution);
   ledcAttach(M5.IN1, freq, resolution);
   ledcAttach(M5.IN2, freq, resolution);
 
