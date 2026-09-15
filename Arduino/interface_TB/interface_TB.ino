@@ -4,7 +4,7 @@
 
 #include <math.h>
 
-const int PWM_FREQ = 5000;
+const int PWM_FREQ = 30000;
 const int PWM_RES = 12;
 const int PWM_MAX = (1 << PWM_RES) - 1;  // 4095
 const int MOTOR_COUNT = 6;
