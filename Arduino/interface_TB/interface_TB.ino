@@ -23,9 +23,9 @@ struct MotorPins {
 };
 
 const MotorPins PINS[MOTOR_COUNT] = {
-  {3, 6, 5},     // P01 — chip 1, canal A (PWMA, AIN1, AIN2)
+  {7, 6, 5},     // P01 — chip 1, canal A (PWMA, AIN1, AIN2)
   {8, 15, 16},   // P02 — chip 1, canal B (PWMB, BIN1, BIN2)
-  {7, 9, 10},    // P03 — chip 2, canal A
+  {3, 9, 10},    // P03 — chip 2, canal A
   {11, 12, 13},  // P04 — chip 2, canal B
   {14, 17, 18},  // P05 — chip 3, canal A
   {21, 47, 48},  // P06 — chip 3, canal B
