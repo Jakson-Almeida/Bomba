@@ -57,6 +57,23 @@ void setup() {
 }
 
 void loop() {
+  setDirection(M4, true);
+  setDirection(M5, true);
+  for (int duty = 0; duty <= PWM_MAX; duty++) {
+    setSpeed(M4, duty);
+    setSpeed(M5, duty);
+    delay(10);
+  }
+
+  for (int duty = PWM_MAX; duty >= 0; duty--) {
+    setSpeed(M4, duty);
+    setSpeed(M5, duty);
+    delay(10);
+  }
+
+  setDirection(M4, false);
+  setDirection(M5, false);
+
   for (int duty = 0; duty <= PWM_MAX; duty++) {
     setSpeed(M4, duty);
     setSpeed(M5, duty);
