@@ -2,7 +2,7 @@
 // PWM nos pinos PWMA/PWMB; AIN/BIN definem o sentido.
 // STBY em HIGH habilita a ponte; em LOW ela entra em standby.
 
-const int PWM_FREQ = 5000;
+const int PWM_FREQ = 500;
 const int PWM_RES = 8;
 const int PWM_MAX = (1 << PWM_RES) - 1;  // 255
 
