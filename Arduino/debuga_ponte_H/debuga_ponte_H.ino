@@ -18,7 +18,8 @@ struct Motor {
 // Canal A e canal B da TB6612FNG. Ajuste os GPIOs conforme a fiação.
 Motor M4 = {15, 2, 4};     // PWMA, AIN1, AIN2
 Motor M5 = {19, 18, 5};   // PWMB, BIN1, BIN2
-Motor M6 = {21, 3, 1};   // PWMB, BIN1, BIN2
+Motor M2 = {21, 3, 1};   // PWMB, BIN1, BIN2
+Motor M3 = {13, 22, 23};   // PWMB, BIN1, BIN2
 
 void setDirection(const Motor& motor, bool forward) {
   digitalWrite(motor.in1, forward ? HIGH : LOW);
@@ -52,7 +53,8 @@ void setup() {
 
   setupMotor(M4);
   setupMotor(M5);
-  setupMotor(M6);
+  setupMotor(M2);
+  setupMotor(M3);
 
   Serial.println("TB6612FNG pronta. Motores em sentido direto.");
   delay(500);
@@ -61,36 +63,42 @@ void setup() {
 void loop() {
   setDirection(M4, true);
   setDirection(M5, true);
-  setDirection(M6, true);
+  setDirection(M2, true);
+  setDirection(M3, true);
   for (int duty = 0; duty <= PWM_MAX; duty++) {
     setSpeed(M4, duty);
     setSpeed(M5, duty);
-    setSpeed(M6, duty);
+    setSpeed(M2, duty);
+    setSpeed(M3, duty);
     delay(10);
   }
 
   for (int duty = PWM_MAX; duty >= 0; duty--) {
     setSpeed(M4, duty);
     setSpeed(M5, duty);
-    setSpeed(M6, duty);
+    setSpeed(M2, duty);
+    setSpeed(M3, duty);
     delay(10);
   }
 
   setDirection(M4, false);
   setDirection(M5, false);
-  setDirection(M6, false);
+  setDirection(M2, false);
+  setDirection(M3, false);
 
   for (int duty = 0; duty <= PWM_MAX; duty++) {
     setSpeed(M4, duty);
     setSpeed(M5, duty);
-    setSpeed(M6, duty);
+    setSpeed(M2, duty);
+    setSpeed(M3, duty);
     delay(10);
   }
 
   for (int duty = PWM_MAX; duty >= 0; duty--) {
     setSpeed(M4, duty);
     setSpeed(M5, duty);
-    setSpeed(M6, duty);
+    setSpeed(M2, duty);
+    setSpeed(M3, duty);
     delay(10);
   }
 }
