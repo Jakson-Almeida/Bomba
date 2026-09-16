@@ -16,8 +16,8 @@ struct Motor {
 };
 
 // Canal A e canal B da TB6612FNG. Ajuste os GPIOs conforme a fiação.
-Motor M4 = {21, 22, 24};     // PWMA, AIN1, AIN2
-Motor M5 = {38, 35, 34};   // PWMB, BIN1, BIN2
+Motor M4 = {15, 2, 4};     // PWMA, AIN1, AIN2
+Motor M5 = {19, 18, 5};   // PWMB, BIN1, BIN2
 
 void setDirection(const Motor& motor, bool forward) {
   digitalWrite(motor.in1, forward ? HIGH : LOW);
