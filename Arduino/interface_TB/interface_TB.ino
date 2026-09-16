@@ -4,14 +4,14 @@
 
 #include <math.h>
 
-const int PWM_FREQ = 30000;
+const int PWM_FREQ = 5000;
 const int PWM_RES = 12;
 const int PWM_MAX = (1 << PWM_RES) - 1;  // 4095
 const int MOTOR_COUNT = 6;
 const unsigned long CMD_TIMEOUT_MS = 5000;
 
 // Um STBY por módulo TB6612 (2 canais cada). Pode amarrar os três no mesmo GPIO.
-const int PIN_STBY[] = {4, 2, 1};
+const int PIN_STBY[] = {40, 2, 1};
 const int STBY_COUNT = 3;
 
 // Ajuste os pinos conforme a fiação. Motor 1 e 2 seguem o sketch 2_motores_TB.
@@ -23,7 +23,7 @@ struct MotorPins {
 };
 
 const MotorPins PINS[MOTOR_COUNT] = {
-  {7, 6, 5},     // P01 — chip 1, canal A (PWMA, AIN1, AIN2)
+  {7, 6, 4},     // P01 — chip 1, canal A (PWMA, AIN1, AIN2)
   {8, 15, 16},   // P02 — chip 1, canal B (PWMB, BIN1, BIN2)
   {3, 9, 10},    // P03 — chip 2, canal A
   {11, 12, 13},  // P04 — chip 2, canal B
