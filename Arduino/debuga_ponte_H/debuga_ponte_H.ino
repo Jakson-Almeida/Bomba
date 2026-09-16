@@ -1,4 +1,4 @@
-// ESP32-S3 + TB6612FNG
+// ESP32-DEV KIT V1 + TB6612FNG
 // PWM nos pinos PWMA/PWMB; AIN/BIN definem o sentido.
 // STBY em HIGH habilita a ponte; em LOW ela entra em standby.
 
@@ -16,8 +16,8 @@ struct Motor {
 };
 
 // Canal A e canal B da TB6612FNG. Ajuste os GPIOs conforme a fiação.
-Motor M4 = {7, 6, 5};     // PWMA, AIN1, AIN2
-Motor M5 = {8, 15, 16};   // PWMB, BIN1, BIN2
+Motor M4 = {21, 22, 24};     // PWMA, AIN1, AIN2
+Motor M5 = {38, 35, 34};   // PWMB, BIN1, BIN2
 
 void setDirection(const Motor& motor, bool forward) {
   digitalWrite(motor.in1, forward ? HIGH : LOW);
