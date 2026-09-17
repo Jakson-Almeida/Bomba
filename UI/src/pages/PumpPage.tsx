@@ -1,6 +1,8 @@
 import { Link, useParams } from "@tanstack/react-router";
 import { AppShell } from "../components/AppShell";
+import { CalibrationPanel } from "../components/CalibrationPanel";
 import { ConnectBar } from "../components/ConnectBar";
+import { PumpMonitor } from "../components/PumpMonitor";
 import { useBench } from "../context/BenchContext";
 import {
   maxFlowFromCalibration,
@@ -17,6 +19,16 @@ export function PumpPage() {
     setDirection,
     toggleRunning,
     setCalibration,
+    saveCalibrationHistory,
+    applyCalibrationHistory,
+    chartsFor,
+    samplesFor,
+    volumeFor,
+    monitoringFor,
+    addChart,
+    updateChart,
+    removeChart,
+    resetTelemetry,
   } = useBench();
   const pump = pumps.find((item) => item.id === Number(id));
   const maxFlow = pump ? maxFlowFromCalibration(pump.calibration) : 0;
@@ -45,7 +57,7 @@ export function PumpPage() {
   }
 
   return (
-    <AppShell>
+    <AppShell wide>
       <ConnectBar />
       <div className="px-5 pt-3 pb-1">
         <Link
@@ -173,56 +185,32 @@ export function PumpPage() {
           {pump.running ? "Desligar bomba" : "Ligar bomba"}
         </button>
 
-        <div className="mt-8 rounded-[14px] bg-foreground/4 p-4 ring-1 ring-border">
-          <p className="text-[11px] tracking-[0.15em] text-muted-foreground uppercase">
-            Calibração com zona morta
-          </p>
-          <p className="mt-2 font-mono text-[12px] leading-relaxed text-faint">
-            Q = 0 se PWM &lt; PWM₀
-            <br />
-            Q = a × (PWM − PWM₀) se PWM ≥ PWM₀
-          </p>
-          <div className="mt-3 grid grid-cols-2 gap-3">
-            <label className="text-[11px] text-muted-foreground">
-              PWM₀ (%)
-              <input
-                className="field-light mt-1"
-                type="number"
-                min={0}
-                max={99.9}
-                step="0.1"
-                value={pump.calibration.pwm0}
-                onChange={(event) =>
-                  setCalibration(pump.id, {
-                    ...pump.calibration,
-                    pwm0: Number(event.target.value),
-                  })
-                }
-              />
-            </label>
-            <label className="text-[11px] text-muted-foreground">
-              a (mL/min / %)
-              <input
-                className="field-light mt-1"
-                type="number"
-                min={0}
-                step="0.01"
-                value={pump.calibration.a}
-                onChange={(event) =>
-                  setCalibration(pump.id, {
-                    ...pump.calibration,
-                    a: Number(event.target.value),
-                  })
-                }
-              />
-            </label>
-          </div>
-          <p className="mt-3 text-[12px] text-muted-foreground">
-            PWM₀ é o limiar em que a bomba começa a mover. Acima disso, a vazão
-            estimada sobe em reta. Sem sensor, meça o volume em alguns PWM acima
-            do limiar para achar a. Em 100% ≈{" "}
-            {maxFlow.toFixed(1)} mL/min.
-          </p>
+        <div className="mt-8">
+          <CalibrationPanel
+            set={pump.calibrationSet}
+            onChange={(scope, calibration) =>
+              setCalibration(pump.id, scope, calibration)
+            }
+            onSaveHistory={(scope, name) =>
+              saveCalibrationHistory(pump.id, scope, name)
+            }
+            onApplyHistory={(record) =>
+              applyCalibrationHistory(pump.id, record)
+            }
+          />
+        </div>
+
+        <div className="mt-6">
+          <PumpMonitor
+            charts={chartsFor(pump.id)}
+            samples={samplesFor(pump.id)}
+            volume={volumeFor(pump.id)}
+            monitoring={monitoringFor(pump.id)}
+            onAdd={() => addChart(pump.id)}
+            onUpdate={(chart) => updateChart(pump.id, chart)}
+            onRemove={(chartId) => removeChart(pump.id, chartId)}
+            onReset={() => resetTelemetry(pump.id)}
+          />
         </div>
       </section>
     </AppShell>
