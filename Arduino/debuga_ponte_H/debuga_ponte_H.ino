@@ -19,7 +19,7 @@ struct Motor {
 Motor M4 = {15, 2, 4};     // PWMA, AIN1, AIN2
 Motor M5 = {19, 18, 5};   // PWMB, BIN1, BIN2
 Motor M1 = {12, 14, 27};   // PWMB, BIN1, BIN2
-Motor M2 = {21, 3, 1};   // PWMB, BIN1, BIN2
+Motor M2 = {26, 25, 33};   // PWMB, BIN1, BIN2
 Motor M3 = {13, 22, 23};   // PWMB, BIN1, BIN2
 
 void setDirection(const Motor& motor, bool forward) {

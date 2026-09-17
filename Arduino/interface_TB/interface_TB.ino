@@ -15,8 +15,8 @@ const unsigned long CMD_TIMEOUT_MS = 5000;
 const int PIN_STBY = 32;
 
 // pwm recebe PWM. in1/in2 são digitais (direção).
-// P01 e P03–P05 repetem o sketch debuga_ponte_H.
-// P02 não pode usar GPIO 3/1 (RX/TX do USB): o painel perderia a serial.
+// P01–P05 repetem o sketch debuga_ponte_H (M1–M5).
+// P06 usa GPIOs livres; GPIO 1 e 3 ficam com o USB.
 struct MotorPins {
   int pwm;
   int in1;
@@ -25,11 +25,11 @@ struct MotorPins {
 
 const MotorPins PINS[MOTOR_COUNT] = {
   {12, 14, 27},  // P01 — M1 (PWM, IN1, IN2)
-  {26, 25, 33},  // P02 — M2 (não usar GPIO 1/3: são TX/RX do USB no DevKit V1)
+  {26, 25, 33},  // P02 — M2
   {13, 22, 23},  // P03 — M3
   {15, 2, 4},    // P04 — M4
   {19, 18, 5},   // P05 — M5
-  {25, 26, 33},  // P06 — ainda sem teste na bancada
+  {21, 16, 17},  // P06 — GPIOs livres (sem teste na bancada)
 };
 
 struct MotorState {
