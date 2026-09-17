@@ -1,0 +1,281 @@
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[brazilian]{babel}
+\usepackage{lmodern}
+\usepackage{amsmath}
+\usepackage{microtype}
+\usepackage[
+  a4paper,
+  top=22mm,
+  bottom=24mm,
+  left=22mm,
+  right=22mm
+]{geometry}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{enumitem}
+\usepackage{hyperref}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage{caption}
+
+\definecolor{navy}{HTML}{1D4F91}
+\definecolor{wine}{HTML}{9B1B30}
+\definecolor{ink}{HTML}{243247}
+\definecolor{muted}{HTML}{5C6B7A}
+
+\hypersetup{
+  colorlinks=true,
+  linkcolor=navy,
+  urlcolor=navy,
+  pdftitle={Guia do Painel de Bombas},
+  pdfauthor={Laboratório Litel --- UFJF / Copasa}
+}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\color{muted}Laboratório Litel --- UFJF}
+\fancyhead[R]{\small\color{muted}Painel de Bombas}
+\fancyfoot[C]{\small\color{muted}\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0pt}
+
+\titleformat{\section}{\Large\bfseries\color{navy}}{\thesection}{0.7em}{}
+\titleformat{\subsection}{\large\bfseries\color{ink}}{\thesubsection}{0.6em}{}
+\setlist[itemize]{topsep=0.35em,itemsep=0.2em}
+\setlist[enumerate]{topsep=0.35em,itemsep=0.25em}
+\captionsetup{font=small,labelfont={bf,color=navy}, skip=4pt}
+
+\newcommand{\app}{\emph{Painel de Bombas}}
+\newcommand{\fig}[3]{%
+  \begin{figure}[ht]
+    \centering
+    \includegraphics[width=#1\textwidth]{#2}
+    \caption{#3}
+  \end{figure}
+}
+
+\begin{document}
+
+\hypersetup{pageanchor=false}
+\begin{titlepage}
+  \thispagestyle{empty}
+  \color{navy}
+  \rule{\textwidth}{3pt}\\[2mm]
+  {\large Laboratório Litel \textbullet\ Universidade Federal de Juiz de Fora}\\[1mm]
+  {\large Projeto em parceria com a Copasa}\\[8mm]
+  {\Huge\bfseries Guia do usuário}\\[3mm]
+  {\LARGE Painel de Bombas}\\[10mm]
+  \noindent\makebox[\textwidth][c]{%
+    \includegraphics[height=15mm]{figuras/logo.png}\hspace{10mm}%
+    \includegraphics[height=14mm]{figuras/ufjf.png}\hspace{10mm}%
+    \includegraphics[height=9mm]{figuras/copasa.png}%
+  }\\[8mm]
+  \color{ink}
+  {Como instalar o aplicativo no Windows, gravar o programa na placa e usar o painel no dia a dia.}\\[8mm]
+  \color{muted}
+  {Versão do aplicativo: 1.0.2 \quad\textbullet\quad Setembro de 2026}\\[2mm]
+  \rule{\textwidth}{0.6pt}
+  \vfill
+  \normalsize\color{ink}
+  Este texto é para quem vai \textbf{usar} a bancada. Não é necessário saber programar.
+\end{titlepage}
+\hypersetup{pageanchor=true}
+
+\tableofcontents
+\newpage
+
+\section{O que é este software}
+
+O \app{} é o programa de computador da bancada de bombas peristálticas. Ele conversa com uma placa \textbf{ESP32} pelo cabo USB e permite:
+
+\begin{itemize}
+  \item ligar e desligar até seis bombas;
+  \item escolher o sentido de rotação (direto ou reverso);
+  \item ajustar a velocidade (PWM);
+  \item estimar a vazão em~mL/min a partir de uma calibração;
+  \item acompanhar gráficos de vazão e do volume de líquido já bombeado.
+\end{itemize}
+
+Não há sensor de fluxo. Os valores de vazão e de volume na tela são \textbf{estimativas} com base na calibração que você informar.
+
+\section{O que você precisa}
+
+\begin{itemize}
+  \item um computador com \textbf{Windows};
+  \item o aplicativo \app{}, baixado no GitHub (seção~\ref{sec:instalar});
+  \item a placa ESP32 já ligada na bancada e no PC pelo USB;
+  \item o programa certo gravado na placa (seção~\ref{sec:firmware}), só na primeira vez ou quando o responsável pela bancada pedir para atualizar.
+\end{itemize}
+
+Há duas combinações comuns de hardware. Use a linha que corresponde à sua montagem:
+
+\begin{table}[ht]
+\centering
+\begin{tabular}{@{}lll@{}}
+\toprule
+\textbf{Ponte H} & \textbf{Placa} & \textbf{Programa a gravar} \\
+\midrule
+L298N & ESP32-S3 & \texttt{Arduino/interface} \\
+TB6612FNG & ESP32 DevKit V1 & \texttt{Arduino/interface\_TB} \\
+\bottomrule
+\end{tabular}
+\caption{Qual sketch ir para a placa.}
+\end{table}
+
+Se você só vai operar as bombas e a placa \textbf{já foi preparada}, pule a seção~\ref{sec:firmware} e comece pela instalação do aplicativo.
+
+\section{Instalar no Windows}
+\label{sec:instalar}
+
+O instalador oficial fica nas \textbf{releases} do repositório, não é preciso clonar o código nem instalar Node.
+
+\begin{enumerate}
+  \item Abra no navegador:\\
+  \url{https://github.com/Jakson-Almeida/Bomba/releases/latest}
+  \item Baixe o arquivo \textbf{Painel de Bombas Setup} (extensão \texttt{.exe}). Existe também um executável portátil, que não instala nada: basta abrir.
+  \item Execute o instalador. Se o Windows mostrar um aviso do SmartScreen, escolha \emph{Mais informações} e depois \emph{Executar assim mesmo} --- o arquivo veio do GitHub do laboratório.
+  \item Siga as telas (próximo / instalar). Ao terminar, abra o atalho \textbf{Painel de Bombas} na área de trabalho ou no menu Iniciar.
+\end{enumerate}
+
+Sempre que houver versão nova, volte à mesma página \texttt{/releases/latest} e instale de novo. O endereço \texttt{latest} aponta automaticamente para a publicação mais recente.
+
+\section{Passar o programa para o ESP32}
+\label{sec:firmware}
+
+Faça isto com a IDE do Arduino (ou equivalente) e o cabo USB da placa.
+
+\begin{enumerate}
+  \item Instale o suporte à família ESP32 na IDE, se ainda não estiver instalado.
+  \item Escolha a placa correta: \textbf{ESP32 Dev Module} (DevKit V1) ou \textbf{ESP32-S3}, conforme a tabela acima.
+  \item Selecione a porta COM que aparece ao ligar o USB.
+  \item Abra o sketch indicado: \texttt{interface} (L298N) ou \texttt{interface\_TB} (TB6612FNG).
+  \item Grave (\emph{Upload}) e espere a mensagem de sucesso.
+\end{enumerate}
+
+No DevKit V1 com TB6612, os cinco primeiros motores usam os pinos já testados na bancada (P01 a P05). O sexto canal existe no programa, mas só deve ser usado se a fiação correspondente estiver montada. Os fios \textbf{STBY} das pontes devem ir ao GPIO~32 ou permanecer ligados em 3,3~V --- sem isso a ponte fica em espera e o motor não gira.
+
+Depois de gravar, deixe a placa ligada no USB. O aplicativo no PC é que escolhe essa porta COM e envia os comandos.
+
+\section{Primeiro uso: conectar a placa}
+
+\begin{enumerate}
+  \item Abra o \app{}.
+  \item Em \textbf{Porta COM}, escolha a porta do ESP32. Se a lista estiver vazia, clique em \textbf{Atualizar}.
+  \item Clique em \textbf{Conectar}. O topo da janela deve indicar que a bancada está online.
+  \item Se aparecer aviso de que a porta não respondeu como interface, a placa está com o sketch errado, outra COM foi escolhida, ou outro programa está usando a porta (por exemplo a IDE do Arduino aberta no Monitor Serial).
+\end{enumerate}
+
+Enquanto estiver \textbf{desconectado}, os valores das bombas na tela ficam em zero. Isso é normal: o painel só mostra movimento quando a conversa USB está ativa.
+
+\fig{0.92}{figuras/tela_painel.png}{Tela inicial do Painel de Bombas, com as seis unidades e o PWM global.}
+
+\section{A janela principal}
+
+No alto aparecem o nome do laboratório (Litel / UFJF) e a marca da Copasa. Abaixo:
+
+\begin{itemize}
+  \item \textbf{Porta COM} --- conexão com a placa.
+  \item \textbf{PWM global} --- o mesmo percentual de velocidade para todas as bombas; solte o controle para aplicar.
+  \item \textbf{Parar tudo} --- desliga as seis unidades de uma vez. Use em qualquer dúvida ou emergência de operação.
+  \item \textbf{Cartões P01\ldots P06} --- cada um mostra vazão estimada, PWM e se a bomba está ativa. Toque em \textbf{Abrir} para entrar naquela unidade.
+\end{itemize}
+
+\section{A janela de cada bomba}
+
+Cada cartão abre a página daquela bomba. Lá você controla só aquela unidade, sem perder o PWM global da tela anterior (o global continua valendo se você voltar e usá-lo de novo).
+
+\fig{0.88}{figuras/tela_bomba.png}{Página de uma bomba: velocidade estimada, PWM, sentido e ligar/desligar.}
+
+\begin{itemize}
+  \item \textbf{Velocidade estimada} --- barra em mL/min, calculada pela calibração atual daquele sentido.
+  \item \textbf{PWM} --- 0 a 100\,\%. Muitas bombas só começam a mover o fluido bem acima de 0\,\%; isso se ajusta na calibração (PWM$_0$).
+  \item \textbf{Sentido} --- Direto ou Reverso.
+  \item \textbf{Ligar / Desligar bomba} --- habilita a saída na ponte H.
+\end{itemize}
+
+Use \textbf{‹ Painel} no canto superior para voltar às seis unidades.
+
+\section{Calibração}
+\label{sec:calibracao}
+
+Ainda não há medidor de vazão na linha. O programa estima
+
+\[
+Q = 0 \quad\text{se PWM} < \mathrm{PWM}_0,
+\qquad
+Q = a \times (\mathrm{PWM} - \mathrm{PWM}_0) \quad\text{se PWM} \ge \mathrm{PWM}_0.
+\]
+
+$Q$ está em mL/min, PWM em porcentagem, $a$ em (mL/min) por ponto percentual e PWM$_0$ é o limiar em que o tubo realmente começa a entregar líquido.
+
+\subsection{Ambos, direto ou reverso}
+
+Por padrão a opção \textbf{Ambos} está marcada: os mesmos $a$ e PWM$_0$ valem nos dois sentidos. Se a bomba não se comporta igual nos dois lados, escolha \textbf{Direto} ou \textbf{Reverso} e preencha valores só daquele sentido. Enquanto um sentido não tiver valores próprios, ele continua usando a calibração de Ambos.
+
+\fig{0.92}{figuras/tela_calibracao.png}{Calibração com escolha de Ambos/Direto/Reverso, campos PWM$_0$ e $a$, e histórico com data e hora.}
+
+Como achar os números, na prática:
+
+\begin{enumerate}
+  \item Ligue a bomba no sentido desejado.
+  \item Suba o PWM até o fluido sair de forma contínua --- esse é um bom PWM$_0$.
+  \item Cronometre o volume num béquer em dois ou três PWM acima do limiar (por exemplo 80\,\%, 90\,\% e 100\,\%).
+  \item $a$ é o quanto a vazão sobe a cada ponto de PWM nessa faixa.
+\end{enumerate}
+
+\subsection{Histórico}
+
+Em \textbf{Nome no histórico} você pode escrever um rótulo (por exemplo o dia do ensaio) e tocar em \textbf{Salvar}. Ficam registrados nome (se houver), data, hora, se valia para ambos/direto/reverso e os parâmetros. \textbf{Usar} recoloca aquele conjunto na bomba. O histórico fica neste computador (não vai para a placa).
+
+\section{Gráficos de vazão e volume}
+\label{sec:graficos}
+
+Na mesma página da bomba, a área \textbf{Monitoramento} começa vazia de propósito: nada é registrado até você pedir.
+
+\begin{enumerate}
+  \item Toque em \textbf{Adicionar gráfico}. A partir daí a bomba passa a guardar amostras (cerca de quatro por segundo).
+  \item Em \textbf{Curvas}, marque \textbf{Vazão} (mL/min) e/ou \textbf{Volume acumulado} (mL). O volume é a soma no tempo da vazão estimada --- o ``tanque virtual'' daquele ensaio.
+  \item Em \textbf{Eixo de tempo}, escolha \textbf{Desde o início} (o gráfico cresce com o ensaio) ou uma janela recente (30~s, 1~min, 5~min ou 15~min).
+  \item Você pode adicionar \textbf{mais de um gráfico} (por exemplo um só com vazão em 1~min e outro com o volume desde o início).
+  \item \textbf{Ocultar} tira o desenho da frente, mas as amostras continuam. \textbf{Remover} apaga aquele gráfico. \textbf{Zerar volume} recomeça o acumulado e a série.
+\end{enumerate}
+
+\fig{0.95}{figuras/tela_graficos.png}{Área de monitoramento na página da bomba, com escolha de curvas e de janela de tempo.}
+
+\fig{0.95}{figuras/grafico_vazao_volume.png}{Exemplo de ensaio: vazão (eixo esquerdo, mL/min) e volume acumulado (eixo direito, mL) ao longo do tempo.}
+
+Os gráficos usam a vazão \emph{estimada}. Se a calibração estiver errada, o volume na tela também estará. Não substituem uma balança ou proveta quando o ensaio exigir valor metrológico.
+
+\section{Se algo não funcionar}
+
+\begin{description}[style=nextline,leftmargin=1.2em,font=\bfseries\color{navy}]
+  \item[O aplicativo não lista porta COM]
+    Confirme que está usando o instalador Windows (não o site aberto só no navegador) e que o cabo USB está na placa certa. Clique em Atualizar. Feche o Monitor Serial da IDE do Arduino, se estiver aberto.
+  \item[Conecta, mas as bombas não giram]
+    Verifique se tocou em Ligar bomba, se o PWM passou do PWM$_0$, se a fonte das bombas (VM) está ligada e se o STBY da ponte TB6612 está em nível alto.
+  \item[A vazão na tela não bate com o béquer]
+    Refaça a calibração daquele sentido e salve no histórico. Lembre que abaixo de PWM$_0$ a estimativa é zero.
+  \item[O gráfico não aparece]
+    É preciso tocar em Adicionar gráfico naquela bomba. Cada unidade tem o próprio monitoramento.
+\end{description}
+
+\section{Onde obter ajuda e atualizações}
+
+\begin{itemize}
+  \item Aplicativo e notas de versão:\\
+  \url{https://github.com/Jakson-Almeida/Bomba/releases/latest}
+  \item Código e este guia (pasta \texttt{documentos/} no repositório):\\
+  \url{https://github.com/Jakson-Almeida/Bomba}
+\end{itemize}
+
+Em caso de dúvida de operação da bancada, fale com o responsável no Laboratório Litel.
+
+\vspace{1.2em}
+{\small\color{muted}Laboratório Litel --- UFJF, em parceria com a Copasa. Guia do Painel de Bombas, 2026.}
+
+\end{document}

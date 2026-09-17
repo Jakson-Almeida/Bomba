@@ -6,6 +6,8 @@ Painel da bancada de **bombas peristálticas**: o computador comunica com o ESP3
 
 O aplicativo já está disponível para baixar. Não precisa clonar o repositório nem instalar Node localmente.
 
+Há um [guia do usuário em PDF](documentos/guia_usuario.pdf) na pasta `documentos/`, com instalação, firmware da placa, telas, calibração e gráficos.
+
 1. Abra a [página de releases](https://github.com/Jakson-Almeida/Bomba/releases/latest) e baixe o instalador **Painel de Bombas** para Windows.
 2. Instale e abra o app.
 3. Grave no ESP32 o sketch **Arduino/interface** (L298N) ou **Arduino/interface_TB** (TB6612FNG), só na primeira vez ou quando o firmware mudar.

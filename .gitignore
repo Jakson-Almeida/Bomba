@@ -4,3 +4,8 @@ UI/dist/
 UI/dist-electron/
 UI/release/
 UI/build/icons/
+documentos/*.aux
+documentos/*.log
+documentos/*.out
+documentos/*.toc
+documentos/*.synctex.gz
