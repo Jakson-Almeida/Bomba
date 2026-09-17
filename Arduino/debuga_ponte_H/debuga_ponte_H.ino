@@ -18,6 +18,7 @@ struct Motor {
 // Canal A e canal B da TB6612FNG. Ajuste os GPIOs conforme a fiação.
 Motor M4 = {15, 2, 4};     // PWMA, AIN1, AIN2
 Motor M5 = {19, 18, 5};   // PWMB, BIN1, BIN2
+Motor M1 = {12, 14, 27};   // PWMB, BIN1, BIN2
 Motor M2 = {21, 3, 1};   // PWMB, BIN1, BIN2
 Motor M3 = {13, 22, 23};   // PWMB, BIN1, BIN2
 
@@ -53,6 +54,7 @@ void setup() {
 
   setupMotor(M4);
   setupMotor(M5);
+  setupMotor(M1);
   setupMotor(M2);
   setupMotor(M3);
 
@@ -63,11 +65,13 @@ void setup() {
 void loop() {
   setDirection(M4, true);
   setDirection(M5, true);
+  setDirection(M1, true);
   setDirection(M2, true);
   setDirection(M3, true);
   for (int duty = 0; duty <= PWM_MAX; duty++) {
     setSpeed(M4, duty);
     setSpeed(M5, duty);
+    setSpeed(M1, duty);
     setSpeed(M2, duty);
     setSpeed(M3, duty);
     delay(10);
@@ -76,6 +80,7 @@ void loop() {
   for (int duty = PWM_MAX; duty >= 0; duty--) {
     setSpeed(M4, duty);
     setSpeed(M5, duty);
+    setSpeed(M1, duty);
     setSpeed(M2, duty);
     setSpeed(M3, duty);
     delay(10);
@@ -83,12 +88,14 @@ void loop() {
 
   setDirection(M4, false);
   setDirection(M5, false);
+  setDirection(M1, false);
   setDirection(M2, false);
   setDirection(M3, false);
 
   for (int duty = 0; duty <= PWM_MAX; duty++) {
     setSpeed(M4, duty);
     setSpeed(M5, duty);
+    setSpeed(M1, duty);
     setSpeed(M2, duty);
     setSpeed(M3, duty);
     delay(10);
@@ -97,6 +104,7 @@ void loop() {
   for (int duty = PWM_MAX; duty >= 0; duty--) {
     setSpeed(M4, duty);
     setSpeed(M5, duty);
+    setSpeed(M1, duty);
     setSpeed(M2, duty);
     setSpeed(M3, duty);
     delay(10);
