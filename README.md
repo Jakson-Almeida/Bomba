@@ -1,4 +1,4 @@
-# Bomba
+# Central De Bombas
 
 Painel da bancada de **bombas peristálticas**: o computador comunica com o ESP32 pelo cabo USB e controla até 6 bombas (ligar, sentido e velocidade).
 
