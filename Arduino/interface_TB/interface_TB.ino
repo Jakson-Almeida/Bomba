@@ -1,4 +1,4 @@
-// ESP32-S3 + TB6612FNG — 6 bombas peristálticas
+// ESP32 DevKit V1 + TB6612FNG — 6 bombas peristálticas
 // PWM 12 bits em PWMA/PWMB; AIN/BIN definem o sentido.
 // STBY em HIGH habilita as pontes. Serial USB 115200, uma linha por comando.
 
@@ -10,12 +10,12 @@ const int PWM_MAX = (1 << PWM_RES) - 1;  // 4095
 const int MOTOR_COUNT = 6;
 const unsigned long CMD_TIMEOUT_MS = 5000;
 
-// Um STBY por módulo TB6612 (2 canais cada). Pode amarrar os três no mesmo GPIO.
-const int PIN_STBY[] = {40, 2, 1};
-const int STBY_COUNT = 3;
+// STBY dos módulos TB6612. GPIO 4 no debug é o IN2 do M4, então não serve
+// como standby: amarre todos os STBY neste pino (ou em 3,3 V).
+const int PIN_STBY = 32;
 
-// Ajuste os pinos conforme a fiação. Motor 1 e 2 seguem o sketch 2_motores_TB.
 // pwm recebe PWM. in1/in2 são digitais (direção).
+// P01–P05 repetem o sketch debuga_ponte_H (M1–M5).
 struct MotorPins {
   int pwm;
   int in1;
@@ -23,12 +23,12 @@ struct MotorPins {
 };
 
 const MotorPins PINS[MOTOR_COUNT] = {
-  {7, 6, 4},     // P01 — chip 1, canal A (PWMA, AIN1, AIN2)
-  {8, 15, 16},   // P02 — chip 1, canal B (PWMB, BIN1, BIN2)
-  {3, 9, 10},    // P03 — chip 2, canal A
-  {11, 12, 13},  // P04 — chip 2, canal B
-  {14, 17, 18},  // P05 — chip 3, canal A
-  {21, 47, 48},  // P06 — chip 3, canal B
+  {12, 14, 27},  // P01 — M1 (PWM, IN1, IN2)
+  {21, 3, 1},    // P02 — M2
+  {13, 22, 23},  // P03 — M3
+  {15, 2, 4},    // P04 — M4
+  {19, 18, 5},   // P05 — M5
+  {25, 26, 33},  // P06 — ainda sem teste na bancada
 };
 
 struct MotorState {
@@ -217,10 +217,8 @@ void setup() {
   }
   delay(200);
 
-  for (int i = 0; i < STBY_COUNT; i++) {
-    pinMode(PIN_STBY[i], OUTPUT);
-    digitalWrite(PIN_STBY[i], HIGH);
-  }
+  pinMode(PIN_STBY, OUTPUT);
+  digitalWrite(PIN_STBY, HIGH);
 
   for (int i = 0; i < MOTOR_COUNT; i++) {
     pinMode(PINS[i].in1, OUTPUT);
