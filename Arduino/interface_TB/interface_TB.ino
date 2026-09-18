@@ -25,7 +25,7 @@ struct MotorPins {
 
 const MotorPins PINS[MOTOR_COUNT] = {
   {12, 14, 27},  // P01 — M1 (PWM, IN1, IN2)
-  {21, 32, 35},  // P02 — M2
+  {21, 32, 16},  // P02 — M2
   {26, 25, 33},  // P03 — M3
   {13, 22, 23},  // P04 — M4
   {15, 2, 4},    // P05 — M5
