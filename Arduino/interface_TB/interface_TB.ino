@@ -25,11 +25,11 @@ struct MotorPins {
 
 const MotorPins PINS[MOTOR_COUNT] = {
   {12, 14, 27},  // P01 — M1 (PWM, IN1, IN2)
-  {26, 25, 33},  // P02 — M2
-  {13, 22, 23},  // P03 — M3
-  {15, 2, 4},    // P04 — M4
-  {19, 18, 5},   // P05 — M5
-  {21, 16, 17},  // P06 — GPIOs livres (sem teste na bancada)
+  {21, 32, 35},  // P02 — M2
+  {26, 25, 33},  // P03 — M3
+  {13, 22, 23},  // P04 — M4
+  {15, 2, 4},    // P05 — M5
+  {19, 18, 5},   // P06 — M6
 };
 
 struct MotorState {
@@ -218,8 +218,8 @@ void setup() {
   }
   delay(200);
 
-  pinMode(PIN_STBY, OUTPUT);
-  digitalWrite(PIN_STBY, HIGH);
+  // pinMode(PIN_STBY, OUTPUT);
+  // digitalWrite(PIN_STBY, HIGH);
 
   for (int i = 0; i < MOTOR_COUNT; i++) {
     pinMode(PINS[i].in1, OUTPUT);
