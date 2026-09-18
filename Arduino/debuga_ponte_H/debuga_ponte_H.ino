@@ -1,13 +1,11 @@
-// ESP32-DEV KIT V1 + TB6612FNG
+// ESP32-DEV KIT V1 + TB6612FNG — 6 motores
 // PWM nos pinos PWMA/PWMB; AIN/BIN definem o sentido.
-// STBY em HIGH habilita a ponte; em LOW ela entra em standby.
+// STBY das pontes amarrado em 3,3 V (não usar GPIO: 4 é IN2 da M5 e 32 é IN1 da M2).
 
 const int PWM_FREQ = 500;
 const int PWM_RES = 8;
 const int PWM_MAX = (1 << PWM_RES) - 1;  // 255
-
-// Um STBY só, compartilhado pelos dois canais.
-const int PIN_STBY = 4;
+const int MOTOR_COUNT = 6;
 
 struct Motor {
   int pwm;  // PWMA / PWMB
@@ -15,12 +13,15 @@ struct Motor {
   int in2;  // AIN2 / BIN2
 };
 
-// Canal A e canal B da TB6612FNG. Ajuste os GPIOs conforme a fiação.
-Motor M4 = {15, 2, 4};     // PWMA, AIN1, AIN2
-Motor M5 = {19, 18, 5};   // PWMB, BIN1, BIN2
-Motor M1 = {12, 14, 27};   // PWMB, BIN1, BIN2
-Motor M2 = {26, 25, 33};   // PWMB, BIN1, BIN2
-Motor M3 = {13, 22, 23};   // PWMB, BIN1, BIN2
+// Mesmos GPIOs do interface_TB (P01–P06). Evita GPIO 1/3 (USB) e 34–39 (só entrada).
+Motor M1 = {12, 14, 27};  // PWM, IN1, IN2
+Motor M2 = {21, 32, 16};
+Motor M3 = {26, 25, 33};
+Motor M4 = {13, 22, 23};
+Motor M5 = {15, 2, 4};
+Motor M6 = {19, 18, 5};
+
+Motor* motors[MOTOR_COUNT] = {&M1, &M2, &M3, &M4, &M5, &M6};
 
 void setDirection(const Motor& motor, bool forward) {
   digitalWrite(motor.in1, forward ? HIGH : LOW);
@@ -45,68 +46,50 @@ void setupMotor(const Motor& motor) {
   setDirection(motor, true);
 }
 
+void setAllDirection(bool forward) {
+  for (int i = 0; i < MOTOR_COUNT; i++) {
+    setDirection(*motors[i], forward);
+  }
+}
+
+void setAllSpeed(int duty) {
+  for (int i = 0; i < MOTOR_COUNT; i++) {
+    setSpeed(*motors[i], duty);
+  }
+}
+
 void setup() {
   Serial.begin(115200);
   delay(1000);
 
-  pinMode(PIN_STBY, OUTPUT);
-  digitalWrite(PIN_STBY, HIGH);
+  for (int i = 0; i < MOTOR_COUNT; i++) {
+    setupMotor(*motors[i]);
+  }
 
-  setupMotor(M4);
-  setupMotor(M5);
-  setupMotor(M1);
-  setupMotor(M2);
-  setupMotor(M3);
-
-  Serial.println("TB6612FNG pronta. Motores em sentido direto.");
+  Serial.println("TB6612FNG pronta. Seis motores em sentido direto. STBY em 3,3 V.");
   delay(500);
 }
 
 void loop() {
-  setDirection(M4, true);
-  setDirection(M5, true);
-  setDirection(M1, true);
-  setDirection(M2, true);
-  setDirection(M3, true);
+  setAllDirection(true);
   for (int duty = 0; duty <= PWM_MAX; duty++) {
-    setSpeed(M4, duty);
-    setSpeed(M5, duty);
-    setSpeed(M1, duty);
-    setSpeed(M2, duty);
-    setSpeed(M3, duty);
+    setAllSpeed(duty);
     delay(10);
   }
 
   for (int duty = PWM_MAX; duty >= 0; duty--) {
-    setSpeed(M4, duty);
-    setSpeed(M5, duty);
-    setSpeed(M1, duty);
-    setSpeed(M2, duty);
-    setSpeed(M3, duty);
+    setAllSpeed(duty);
     delay(10);
   }
 
-  setDirection(M4, false);
-  setDirection(M5, false);
-  setDirection(M1, false);
-  setDirection(M2, false);
-  setDirection(M3, false);
-
+  setAllDirection(false);
   for (int duty = 0; duty <= PWM_MAX; duty++) {
-    setSpeed(M4, duty);
-    setSpeed(M5, duty);
-    setSpeed(M1, duty);
-    setSpeed(M2, duty);
-    setSpeed(M3, duty);
+    setAllSpeed(duty);
     delay(10);
   }
 
   for (int duty = PWM_MAX; duty >= 0; duty--) {
-    setSpeed(M4, duty);
-    setSpeed(M5, duty);
-    setSpeed(M1, duty);
-    setSpeed(M2, duty);
-    setSpeed(M3, duty);
+    setAllSpeed(duty);
     delay(10);
   }
 }

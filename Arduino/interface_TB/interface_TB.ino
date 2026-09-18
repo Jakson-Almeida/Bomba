@@ -15,8 +15,8 @@ const unsigned long CMD_TIMEOUT_MS = 5000;
 const int PIN_STBY = 32;
 
 // pwm recebe PWM. in1/in2 são digitais (direção).
-// P01–P05 repetem o sketch debuga_ponte_H (M1–M5).
-// P06 usa GPIOs livres; GPIO 1 e 3 ficam com o USB.
+// P01–P06 repetem o sketch debuga_ponte_H (M1–M6).
+// GPIO 1 e 3 ficam com o USB; 34–39 são só entrada.
 struct MotorPins {
   int pwm;
   int in1;
