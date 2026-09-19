@@ -1,7 +1,7 @@
 {
   "name": "bomba-ui",
   "private": true,
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Painel desktop para bombas peristálticas via USB",
   "author": "Laboratório Litel — UFJF",
   "type": "module",

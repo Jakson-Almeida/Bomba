@@ -1,7 +1,9 @@
+import { useState } from "react";
 import { Link, useParams } from "@tanstack/react-router";
 import { AppShell } from "../components/AppShell";
 import { CalibrationPanel } from "../components/CalibrationPanel";
 import { ConnectBar } from "../components/ConnectBar";
+import { ExperimentModal } from "../components/ExperimentModal";
 import { PumpMonitor } from "../components/PumpMonitor";
 import { useBench } from "../context/BenchContext";
 import {
@@ -30,6 +32,7 @@ export function PumpPage() {
     removeChart,
     resetTelemetry,
   } = useBench();
+  const [experimentOpen, setExperimentOpen] = useState(false);
   const pump = pumps.find((item) => item.id === Number(id));
   const maxFlow = pump ? maxFlowFromCalibration(pump.calibration) : 0;
 
@@ -185,6 +188,14 @@ export function PumpPage() {
           {pump.running ? "Desligar bomba" : "Ligar bomba"}
         </button>
 
+        <button
+          type="button"
+          onClick={() => setExperimentOpen(true)}
+          className="mt-3 w-full rounded-[14px] bg-panel-2 py-3.5 text-[13px] leading-none font-semibold text-foreground ring-1 ring-border"
+        >
+          Programar experimento
+        </button>
+
         <div className="mt-8">
           <CalibrationPanel
             set={pump.calibrationSet}
@@ -213,6 +224,14 @@ export function PumpPage() {
           />
         </div>
       </section>
+      {experimentOpen ? (
+        <ExperimentModal
+          key={pump.id}
+          pumpId={pump.id}
+          pumpName={pump.name}
+          onClose={() => setExperimentOpen(false)}
+        />
+      ) : null}
     </AppShell>
   );
 }
